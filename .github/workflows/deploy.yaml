@@ -1,0 +1,60 @@
+name: Deploy
+
+on:
+  repository_dispatch:
+    types: release
+
+name: Release
+
+permissions: {}
+jobs:
+  release:
+    permissions:
+      contents: write
+      pull-requests: write
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: master
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Set variables
+        id: version
+        run: |
+          echo "addon=${{ github.event.client_payload.version }}" >> "$GITHUB_OUTPUT"
+
+      - name: Set version and update release
+        run: | 
+          jq '.version = "${{ steps.version.outputs.addon }}"' iobroker/config.json > iobroker/config.json.tmp
+          mv iobroker/config.json.tmp iobroker/config.json
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./iobroker
+          file: ./iobroker/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/klein0r/ha-app-iobroker:latest
+            ghcr.io/klein0r/ha-app-iobroker:${{ steps.version.outputs.addon }}
+          build-args: |
+            BUILD_VERSION=${{ steps.version.outputs.addon }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            BUILD_REF=${{ github.sha }}
+            BUILD_REPOSITORY=${{ github.repository }}
