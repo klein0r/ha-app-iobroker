@@ -11,15 +11,9 @@
 ![Project Maintenance][maintenance-shield]
 [![GitHub Activity][commits-shield]][commits]
 
-Flow-based programming for the Internet of Things.
+Integration platform for the Internet of Things
 
 ![ioBroker in the Home Assistant Frontend](images/screenshot.png)
-
-## About
-
-
-
-[:books: Read the full app documentation][docs]
 
 ## Installation
 
