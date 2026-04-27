@@ -45,6 +45,7 @@ RUN \
         libatomic1 \
         locales \
         nfs-common \
+        nginx \
         procps \
         python3 \
         python3-dev \
@@ -87,6 +88,8 @@ RUN \
     && groupmod -g 1000 iobroker \
     && chown root:iobroker /usr/sbin/gosu \
     \
+    && mkdir -p /etc/nginx/servers \
+    \
     && apt-get clean \
     && rm -rf \
         /tmp/* \
@@ -109,9 +112,11 @@ COPY rootfs /
 RUN chmod 0755 \
         /etc/s6-overlay/s6-rc.d/init-iobroker/run \
         /etc/s6-overlay/s6-rc.d/iobroker/run \
+        /etc/s6-overlay/s6-rc.d/init-nginx/run \
+        /etc/s6-overlay/s6-rc.d/nginx/run \
         /opt/ha-iobroker/iobroker-wrapper.sh
 
-# ioBroker admin UI (exposed for the Home Assistant ingress / port mapping)
+# ioBroker admin UI (direct port mapping; nginx handles the Ingress path)
 EXPOSE 8081
 
 # Build arguments injected by the Home Assistant add-on builder

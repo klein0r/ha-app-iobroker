@@ -1,0 +1,17 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# Oneshot: renders the nginx ingress config from the Go template so that
+# nginx listens on the HA-assigned ingress interface and port.
+
+set -euo pipefail
+
+echo "[init-nginx] Generating nginx ingress configuration."
+
+bashio::var.json \
+    interface "$(bashio::addon.ip_address)" \
+    port      "^$(bashio::addon.ingress_port)" \
+    | tempio \
+        -template /etc/nginx/templates/ingress.gtpl \
+        -out      /etc/nginx/servers/ingress.conf
+
+echo "[init-nginx] Done."

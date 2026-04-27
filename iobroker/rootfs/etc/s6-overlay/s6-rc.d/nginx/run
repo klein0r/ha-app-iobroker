@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Longrun: runs nginx in the foreground so s6 can supervise it.
+# SIGTERM from s6 stops nginx gracefully.
+
+set -euo pipefail
+
+echo "[nginx] Starting nginx."
+exec nginx -c /etc/nginx/nginx.conf
