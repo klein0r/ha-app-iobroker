@@ -5,7 +5,7 @@ FROM ${BUILD_FROM}
 # Build arguments controlling the ioBroker installation
 # NODE_MAJOR mirrors the same knob the buanet image uses to pin the
 # Node.js major version pulled in by the official ioBroker installer.
-ARG NODE_MAJOR=20
+ARG NODE_MAJOR=22
 
 ENV \
     DEBIAN_FRONTEND="noninteractive" \

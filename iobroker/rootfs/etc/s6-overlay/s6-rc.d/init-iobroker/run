@@ -146,7 +146,7 @@ else
     admin_reverse_proxy_now="$(gosu "${IOB_USER}" iob object get "${admininstance}" --pretty 2>/dev/null \
         | grep -oP '(?<="reverseProxy": )\S+' | tr -d ',' || true)"
     if [[ "${admin_reverse_proxy_now}" != "true" ]]; then
-        log "Enabling reverseProxy on admin adapter (was: ${admin_reverse_proxy_now:-unset})."
+        log "Enabling reverseProxy on instance ${admininstance} (was: ${admin_reverse_proxy_now:-unset})."
         gosu "${IOB_USER}" iob set "${admin_short}" --reverseProxy true 2>/dev/null \
             || log "Warning: could not set reverseProxy - non-fatal, continuing."
     fi
