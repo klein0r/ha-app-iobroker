@@ -3,7 +3,7 @@ version: dev
 slug: iobroker
 description: Integration platform for the Internet of Things
 ingress: true
-ingress_port: 0
+ingress_port: 8081
 ingress_stream: true
 panel_icon: mdi:iobroker
 init: false

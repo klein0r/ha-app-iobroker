@@ -137,10 +137,23 @@ else
         gosu "${IOB_USER}" iob host "${admin_host}"
     fi
 
+    admin_short="${admininstance#system.adapter.}"
+
+    # Enable reverse-proxy mode so the admin adapter honours X-Forwarded-*
+    # headers sent by the Home Assistant Ingress proxy. Without this the UI
+    # generates absolute URLs pointing to the container-internal address
+    # instead of the HA ingress path.
+    admin_reverse_proxy_now="$(gosu "${IOB_USER}" iob object get "${admininstance}" --pretty 2>/dev/null \
+        | grep -oP '(?<="reverseProxy": )\S+' | tr -d ',' || true)"
+    if [[ "${admin_reverse_proxy_now}" != "true" ]]; then
+        log "Enabling reverseProxy on admin adapter (was: ${admin_reverse_proxy_now:-unset})."
+        gosu "${IOB_USER}" iob set "${admin_short}" --reverseProxy true 2>/dev/null \
+            || log "Warning: could not set reverseProxy - non-fatal, continuing."
+    fi
+
     # Optional admin-port override. Defaults to 8081 (the value advertised in
     # config.yaml). Only set if the user supplied IOB_ADMINPORT.
     if [[ -n "${IOB_ADMINPORT}" ]]; then
-        admin_short="${admininstance#system.adapter.}"
         admin_port_now="$(gosu "${IOB_USER}" iob object get "${admininstance}" --pretty 2>/dev/null \
             | grep -oP '(?<="port": )[0-9]+' || true)"
         if [[ "${IOB_ADMINPORT}" != "${admin_port_now}" ]]; then
