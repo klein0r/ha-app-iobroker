@@ -2,7 +2,7 @@ name: "ioBroker"
 version: dev
 stage: experimental
 slug: iobroker
-image: ghcr.io/klein0r/ha-app-iobroker:{arch}
+image: ghcr.io/klein0r/ha-app-iobroker-{arch}
 description: Integration platform for the Internet of Things
 url: >
   https://github.com/klein0r/ha-app-iobroker

@@ -82,8 +82,8 @@ jobs:
           push: true
           platforms: ${{ steps.platform.outputs.platform }}
           tags: |
-            ghcr.io/klein0r/ha-app-iobroker:${{ matrix.architecture }}
-            ghcr.io/klein0r/ha-app-iobroker:${{ matrix.architecture }}-${{ needs.information.outputs.version }}
+            ghcr.io/klein0r/ha-app-iobroker-${{ matrix.architecture }}:${{ needs.information.outputs.version }}
+            ghcr.io/klein0r/ha-app-iobroker-${{ matrix.architecture }}:latest
           build-args: |
             BUILD_ARCH=${{ matrix.architecture }}
             BUILD_VERSION=${{ needs.information.outputs.version }}
