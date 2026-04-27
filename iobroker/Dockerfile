@@ -86,6 +86,7 @@ RUN \
     && usermod --home /opt/iobroker iobroker \
     && usermod -u 1000 iobroker \
     && groupmod -g 1000 iobroker \
+    && usermod -aG dialout iobroker \
     && chown root:iobroker /usr/sbin/gosu \
     \
     && mkdir -p /etc/nginx/servers \
