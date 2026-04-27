@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# Oneshot init for the ioBroker Home Assistant add-on.
+#
+# Ports the relevant parts of the buanet/ioBroker.docker startup script
+# (steps 1-4) to the HA add-on world. The longrun service performs step 5
+# (running the js-controller).
+#
+# Key deviations from buanet:
+#   * Persistence lives in /data (HA's only persistent path), not /opt.
+#     /opt/iobroker is a symlink to /data/iobroker, kept in sync here.
+#   * UID/GID are pinned to 1000 in the Dockerfile, so SETUID/SETGID logic
+#     is dropped.
+#   * Multihost, external DBs, AVAHI, USB chown, package install,
+#     userscripts are out of scope for this add-on.
+
+set -euo pipefail
+
+readonly IOB_HOME="/opt/iobroker"
+readonly DATA_HOME="/data/iobroker"
+readonly INITIAL_TAR="/opt/initial_iobroker.tar"
+readonly IOB_WRAPPER="/opt/ha-iobroker/iobroker-wrapper.sh"
+readonly IOB_USER="iobroker"
+readonly IOB_UID="$(id -u "${IOB_USER}")"
+readonly IOB_GID="$(id -g "${IOB_USER}")"
+
+DEBUG="${DEBUG:-false}"
+PERMISSION_CHECK="${PERMISSION_CHECK:-true}"
+IOB_ADMINPORT="${IOB_ADMINPORT:-}"
+
+log()  { echo "[init-iobroker] $*"; }
+dbg()  { [[ "${DEBUG}" == "true" ]] && echo "[init-iobroker][DEBUG] $*" || true; }
+fail() { echo "[init-iobroker][ERROR] $*" >&2; exit 1; }
+
+log "Preparing /data/iobroker layout."
+
+# /opt/iobroker should be a symlink to /data/iobroker. The build-time
+# install was tarred into ${INITIAL_TAR}; the directory itself was
+# removed in the Dockerfile. Recover from any state where this is not
+# true (e.g. an old image variant).
+if [[ -e "${IOB_HOME}" && ! -L "${IOB_HOME}" ]]; then
+    log "Removing legacy real directory at ${IOB_HOME}."
+    rm -rf "${IOB_HOME}"
+fi
+
+if [[ ! -L "${IOB_HOME}" ]]; then
+    ln -sfn "${DATA_HOME}" "${IOB_HOME}"
+fi
+
+# Seed /data/iobroker on first start (or after a /data wipe).
+mkdir -p /data
+if [[ ! -d "${DATA_HOME}" ]] || [[ -z "$(ls -A "${DATA_HOME}" 2>/dev/null || true)" ]]; then
+    [[ -f "${INITIAL_TAR}" ]] || fail "Missing ${INITIAL_TAR} - the image is broken."
+    log "Empty /data detected. Seeding fresh ioBroker installation from ${INITIAL_TAR}."
+    rm -rf "${DATA_HOME}"
+    # Tar entries are "opt/iobroker/..."; strip the "opt/" prefix and land in /data.
+    tar -xf "${INITIAL_TAR}" -C /data --strip-components=1
+    chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}"
+elif [[ -f "${DATA_HOME}/iobroker" ]]; then
+    log "Existing ioBroker installation detected in ${DATA_HOME}."
+else
+    log "Found data in ${DATA_HOME} but no iobroker executable."
+    log "If this is not an ioBroker installation, clear the add-on's /data and restart."
+    if [[ "${DEBUG}" == "true" ]]; then
+        ls -al "${DATA_HOME}" >&2 || true
+    fi
+    fail "Refusing to start - unrecognized ${DATA_HOME} contents."
+fi
+
+# Drop the gosu-aware iob wrapper in place. This replaces the upstream
+# "iobroker" CLI that uses sudo internally, which fails in containers.
+# The original is preserved as iobroker.bak the first time we swap.
+if [[ -f "${IOB_WRAPPER}" ]]; then
+    if [[ ! -f "${DATA_HOME}/iobroker" ]] || ! cmp -s "${IOB_WRAPPER}" "${DATA_HOME}/iobroker"; then
+        log "Installing gosu-aware iobroker CLI wrapper."
+        if [[ -f "${DATA_HOME}/iobroker" && ! -f "${DATA_HOME}/iobroker.bak" ]]; then
+            cp -a "${DATA_HOME}/iobroker" "${DATA_HOME}/iobroker.bak"
+        fi
+        install -m 0755 -o "${IOB_UID}" -g "${IOB_GID}" "${IOB_WRAPPER}" "${DATA_HOME}/iobroker"
+    fi
+fi
+
+# Reset ownership inside the data dir. ioBroker is fussy about this and
+# bind-mounted volumes commonly come up root-owned.
+if [[ "${PERMISSION_CHECK}" == "false" ]]; then
+    log "PERMISSION_CHECK=false - skipping chown of ${DATA_HOME}."
+else
+    log "Resetting ownership on ${DATA_HOME} (this can take a moment)."
+    chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}"
+fi
+
+# /opt/.docker_config and /opt/scripts/.docker_config are read by ioBroker's
+# own scripts to detect "running inside docker". They live on the image, not
+# in /data, so they are recreated automatically on every container start.
+chown -R "${IOB_UID}:${IOB_GID}" /opt/.docker_config /opt/scripts/.docker_config 2>/dev/null || true
+
+cd "${DATA_HOME}"
+
+# On a freshly seeded install the tar carries a /opt/iobroker/.fresh_install
+# marker. "iob setup first" initialises the JSONL database; we then drop the
+# marker so subsequent restarts skip this step.
+if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
+    log "Fresh install detected - running 'iob setup first'."
+    mkdir -p "${DATA_HOME}/log"
+    chown "${IOB_UID}:${IOB_GID}" "${DATA_HOME}/log"
+    if ! gosu "${IOB_USER}" iob setup first \
+            > "${DATA_HOME}/log/iob_setup_first.log" 2>&1; then
+        log "'iob setup first' failed. See ${DATA_HOME}/log/iob_setup_first.log."
+        fail "Fresh-install initialisation failed."
+    fi
+    rm -f "${DATA_HOME}/.fresh_install"
+    log "Fresh-install initialisation complete."
+else
+    log "Verifying database connection."
+    if ! gosu "${IOB_USER}" iob uuid >/dev/null 2>&1; then
+        gosu "${IOB_USER}" iob uuid 2>&1 | sed 's/^/[init-iobroker][ERROR] /' >&2 || true
+        fail "ioBroker database not reachable - check /data and try again."
+    fi
+fi
+
+# Sync the hostname recorded in ioBroker with the container hostname.
+# HA Supervisor assigns container hostnames like "addon_local_iobroker", so
+# this typically fires on first start and after an add-on rename.
+current_host="$(hostname)"
+admininstance="$(gosu "${IOB_USER}" iob list instances 2>/dev/null \
+    | grep -m1 -oE 'system\.adapter\.admin\.[0-9]+' || true)"
+
+if [[ -z "${admininstance}" ]]; then
+    log "No admin instance found - skipping hostname sync."
+else
+    dbg "Detected admin instance: ${admininstance}"
+    admin_host="$(gosu "${IOB_USER}" iob object get "${admininstance}" --pretty 2>/dev/null \
+        | grep -oP '(?<="host": ")[^"]*' || true)"
+    dbg "Recorded admin host: ${admin_host:-<unset>} | container host: ${current_host}"
+
+    if [[ -n "${admin_host}" && "${admin_host}" != "${current_host}" ]]; then
+        log "Updating ioBroker hostname from '${admin_host}' to '${current_host}'."
+        gosu "${IOB_USER}" iob host "${admin_host}"
+    fi
+
+    # Optional admin-port override. Defaults to 8081 (the value advertised in
+    # config.yaml). Only set if the user supplied IOB_ADMINPORT.
+    if [[ -n "${IOB_ADMINPORT}" ]]; then
+        admin_short="${admininstance#system.adapter.}"
+        admin_port_now="$(gosu "${IOB_USER}" iob object get "${admininstance}" --pretty 2>/dev/null \
+            | grep -oP '(?<="port": )[0-9]+' || true)"
+        if [[ "${IOB_ADMINPORT}" != "${admin_port_now}" ]]; then
+            log "Setting admin port to ${IOB_ADMINPORT} (was ${admin_port_now:-unset})."
+            gosu "${IOB_USER}" iob set "${admin_short}" --port "${IOB_ADMINPORT}"
+        fi
+    fi
+fi
+
+log "Init complete - handing off to longrun."

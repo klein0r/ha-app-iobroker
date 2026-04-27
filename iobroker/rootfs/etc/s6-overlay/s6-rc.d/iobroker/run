@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Longrun service: runs the ioBroker js-controller as the iobroker user.
+#
+# s6 sends SIGTERM to this process group on shutdown. gosu replaces itself
+# with node via execve, so the controller process *is* this script - SIGTERM
+# arrives at the controller and triggers its own graceful adapter shutdown.
+# After timeout-kill (see ./timeout-kill) s6 sends SIGKILL.
+
+set -euo pipefail
+
+cd /opt/iobroker
+
+echo "[iobroker] Starting js-controller as user 'iobroker'."
+exec gosu iobroker node \
+    /opt/iobroker/node_modules/iobroker.js-controller/controller.js

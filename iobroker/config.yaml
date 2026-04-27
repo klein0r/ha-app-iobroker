@@ -1,0 +1,18 @@
+name: "ioBroker"
+version: dev
+slug: iobroker
+description: Integration platform for the Internet of Things
+ingress: true
+ingress_port: 0
+ingress_stream: true
+panel_icon: mdi:iobroker
+init: false
+homeassistant: 2023.3.0
+arch:
+  - aarch64
+  - amd64
+ports:
+  8081/tcp: 8081
+ports_description:
+  8081/tcp: Admin interface
+host_network: true
