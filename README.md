@@ -21,6 +21,13 @@ Flow-based programming for the Internet of Things.
 
 [:books: Read the full app documentation][docs]
 
+## Installation
+
+1. If you don't have an MQTT broker yet; in Home Assistant go to **[Settings → Apps → App store](https://my.home-assistant.io/redirect/supervisor_store/)**
+2. Click **⋮ → Repositories**, fill in</br> `https://github.com/klein0r/ha-app-iobroker` and click **Add → Close** or click the **Add repository** button below, click **Add → Close** (You might need to enter the **internal IP address** of your Home Assistant instance first).
+   [![Open your Home Assistant instance and show the add app repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fklein0r%2Fha-app-iobroker)
+
+
 ## License
 
 MIT License
@@ -45,26 +52,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-[aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
-[amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
-[commits-shield]: https://img.shields.io/github/commit-activity/y/klein0r/ha-app-iobroker.svg
-[commits]: https://github.com/klein0r/ha-app-iobroker/commits/main
-[contributors]: https://github.com/klein0r/ha-app-iobroker/graphs/contributors
-[docs]: https://github.com/klein0r/ha-app-iobroker/blob/main/iobroker/DOCS.md
-[frenck]: https://github.com/frenck
-[github-actions-shield]: https://github.com/klein0r/ha-app-iobroker/workflows/CI/badge.svg
-[github-actions]: https://github.com/klein0r/ha-app-iobroker/actions
-[github-sponsors-shield]: https://frenck.dev/wp-content/uploads/2019/12/github_sponsor.png
-[github-sponsors]: https://github.com/sponsors/klein0r
-[issue]: https://github.com/klein0r/ha-app-iobroker/issues
-[license-shield]: https://img.shields.io/github/license/klein0r/ha-app-iobroker.svg
-[maintenance-shield]: https://img.shields.io/maintenance/yes/2026.svg
+
 [iobroker]: https://www.iobroker.net
-[nodered-docs]: https://nodered.org/docs
-[patreon-shield]: https://frenck.dev/wp-content/uploads/2019/12/patreon.png
-[patreon]: https://www.patreon.com/frenck
+[iobroker-docs]: https://www.iobroker.net/#en/documentation
 [project-stage-shield]: https://img.shields.io/badge/project%20stage-production%20ready-brightgreen.svg
-[reddit]: https://reddit.com/r/homeassistant
 [releases-shield]: https://img.shields.io/github/release/klein0r/ha-app-iobroker.svg
 [releases]: https://github.com/klein0r/ha-app-iobroker/releases
-[repository]: https://github.com/hassio-addons/repository
+[license-shield]: https://img.shields.io/github/license/klein0r/ha-app-iobroker.svg
+[aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
+[amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
+[github-actions-shield]: https://github.com/klein0r/ha-app-iobroker/workflows/CI/badge.svg
+[github-actions]: https://github.com/klein0r/ha-app-iobroker/actions
+[maintenance-shield]: https://img.shields.io/maintenance/yes/2026.svg
+[commits-shield]: https://img.shields.io/github/commit-activity/y/klein0r/ha-app-iobroker.svg
+[commits]: https://github.com/klein0r/ha-app-iobroker/commits/main
+[docs]: https://github.com/klein0r/ha-app-iobroker/blob/main/iobroker/DOCS.md
