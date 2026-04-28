@@ -174,7 +174,7 @@ fi
 # SUPERVISOR_TOKEN is injected by HA Supervisor on every add-on start when
 # homeassistant_api: true is set in config.yaml. The token is refreshed on
 # every start so it stays current even after Supervisor restarts.
-if [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
+if [[ -n "${SUPERVISOR_TOKEN:-}" ]] && bashio::config.true 'install_hass_adapter'; then
     hass_instance="$(gosu "${IOB_USER}" iob list instances 2>/dev/null \
         | grep -oE 'system\.adapter\.hass\.[0-9]+' | head -1 || true)"
 

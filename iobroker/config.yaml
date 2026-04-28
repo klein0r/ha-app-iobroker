@@ -19,6 +19,10 @@ ports:
   8081/tcp: 8081
 ports_description:
   8081/tcp: Admin interface
+options:
+  install_hass_adapter: true
+schema:
+  install_hass_adapter: bool
 homeassistant_api: true
 host_network: true
 usb: true
