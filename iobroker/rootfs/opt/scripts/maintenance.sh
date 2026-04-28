@@ -14,7 +14,7 @@ MODE="${1:-}"
 FLAGS="${2:-}"
 NO_RESTART_FLAG="/tmp/.iobroker_no_restart"
 HEALTHCHECK_FILE="/opt/.docker_config/.healthcheck"
-S6_SERVICE_DIR="/run/s6/legacy-services/iobroker"
+S6_SERVICE_DIR="/run/service/iobroker"
 
 log() { echo "[maintenance] $*"; }
 

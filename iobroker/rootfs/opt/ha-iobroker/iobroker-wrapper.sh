@@ -22,15 +22,15 @@ run_iob() {
 }
 
 block_in_container() {
-    echo "Command '$1' is blocked because ioBroker runs inside a Home Assistant add-on container."
-    echo "Restart the add-on from the Supervisor UI instead."
+    echo "Command '$1' is blocked because ioBroker runs inside a Home Assistant app container."
+    echo "Restart the app from the UI instead."
     exit 1
 }
 
 case "${1:-}" in
     fix|"node fix")
-        echo "Running the ioBroker fixer is not supported inside this add-on."
-        echo "Reinstall the add-on or switch to a newer image version instead."
+        echo "Running the ioBroker fixer is not supported inside this app."
+        echo "Reinstall the app or switch to a newer image version instead."
         exit 1
         ;;
     diag)
