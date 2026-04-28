@@ -185,25 +185,28 @@ fi
 # SUPERVISOR_TOKEN is injected by HA Supervisor on every add-on start when
 # homeassistant_api: true is set in config.yaml. The token is refreshed on
 # every start so it stays current even after Supervisor restarts.
-if [[ -n "${SUPERVISOR_TOKEN:-}" ]] && bashio::config.true 'install_hass_adapter'; then
+if bashio::config.true 'install_hass_adapter' 2>/dev/null; then
     mkdir -p "${DATA_HOME}/log"
 
     # Use iob object get rather than iob list instances: the latter requires a
     # running controller and can return incomplete output during oneshot phase.
-    if ! gosu "${IOB_USER}" iob object get system.adapter.hass.0 >/dev/null 2>&1; then
-        log "hass adapter instance not found - installing ioBroker.hass."
-        gosu "${IOB_USER}" iob add hass \
+    if ! gosu "${IOB_USER}" iob object get system.adapter.hass.99 >/dev/null 2>&1; then
+        log "hass adapter instance not found - installing ioBroker.hass.99"
+        gosu "${IOB_USER}" iob add hass 99 \
             >> "${DATA_HOME}/log/iob_hass_setup.log" 2>&1 \
             || log "Warning: could not install hass adapter - non-fatal, continuing."
     fi
 
-    log "Injecting SUPERVISOR_TOKEN into hass.0 native config."
-    hass_config="$(printf '{"native":{"host":"supervisor","port":80,"ssl":false,"token":"%s"}}' "${SUPERVISOR_TOKEN}")"
-    gosu "${IOB_USER}" iob object extend system.adapter.hass.0 "${hass_config}" \
-        >> "${DATA_HOME}/log/iob_hass_setup.log" 2>&1 \
-        || log "Warning: could not configure hass.0 - non-fatal, continuing."
+    if [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
+        log "Changing config of instance hass.99"
+        gosu "${IOB_USER}" iob object extend system.adapter.hass.99 '{"native":{"host":"supervisor","port":80,"secure":false}}' \
+            >> "${DATA_HOME}/log/iob_hass_setup.log" 2>&1 \
+            || log "Warning: could not configure hass.99 - non-fatal, continuing."
+    else
+        log "Warning: SUPERVISOR_TOKEN not set - hass adapter installed but token not configured."
+    fi
 else
-    dbg "SUPERVISOR_TOKEN not set or install_hass_adapter disabled - skipping hass adapter auto-configuration."
+    dbg "install_hass_adapter disabled - skipping hass adapter auto-configuration."
 fi
 
 log "Init complete - handing off to longrun."

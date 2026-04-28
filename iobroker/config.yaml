@@ -26,6 +26,7 @@ schema:
   install_hass_adapter: bool
   extra_packages:
     - str
+hassio_api: true
 homeassistant_api: true
 host_network: true
 usb: true
