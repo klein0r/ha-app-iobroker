@@ -30,11 +30,23 @@ jobs:
         run: |
           sed -i 's/^version: .*/version: ${{ steps.version.outputs.addon }}/' iobroker/config.yaml
 
-      - name: Commit updated config.yaml
+      - name: Prepend release notes to CHANGELOG.md
+        env:
+          RELEASE_BODY: ${{ github.event.release.body }}
+        run: |
+          VERSION="${{ steps.version.outputs.addon }}"
+          ENTRY="## ${VERSION}"$'\n\n'"${RELEASE_BODY}"
+          if [ -s iobroker/CHANGELOG.md ]; then
+            echo "${ENTRY}"$'\n\n'"$(cat iobroker/CHANGELOG.md)" > iobroker/CHANGELOG.md
+          else
+            echo "${ENTRY}" > iobroker/CHANGELOG.md
+          fi
+
+      - name: Commit updated config.yaml and CHANGELOG.md
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add iobroker/config.yaml
+          git add iobroker/config.yaml iobroker/CHANGELOG.md
           git commit -m "chore: bump version to ${{ steps.version.outputs.addon }}"
           git push
 
