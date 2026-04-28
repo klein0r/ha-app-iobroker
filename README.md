@@ -54,7 +54,7 @@ SOFTWARE.
 [license-shield]: https://img.shields.io/github/license/klein0r/ha-app-iobroker.svg
 [aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
 [amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
-[github-actions-shield]: https://github.com/klein0r/ha-app-iobroker/workflows/CI/badge.svg
+[github-actions-shield]: https://github.com/klein0r/ha-app-iobroker/workflows/Deploy/badge.svg
 [github-actions]: https://github.com/klein0r/ha-app-iobroker/actions
 [maintenance-shield]: https://img.shields.io/maintenance/yes/2026.svg
 [commits-shield]: https://img.shields.io/github/commit-activity/y/klein0r/ha-app-iobroker.svg
