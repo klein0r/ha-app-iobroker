@@ -170,4 +170,29 @@ else
     fi
 fi
 
+# Wire up the ioBroker.hass adapter when running inside Home Assistant.
+# SUPERVISOR_TOKEN is injected by HA Supervisor on every add-on start when
+# homeassistant_api: true is set in config.yaml. The token is refreshed on
+# every start so it stays current even after Supervisor restarts.
+if [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
+    hass_instance="$(gosu "${IOB_USER}" iob list instances 2>/dev/null \
+        | grep -oE 'system\.adapter\.hass\.[0-9]+' | head -1 || true)"
+
+    if [[ -z "${hass_instance}" ]]; then
+        log "No hass adapter instance found - installing ioBroker.hass."
+        mkdir -p "${DATA_HOME}/log"
+        gosu "${IOB_USER}" iob add hass \
+            >> "${DATA_HOME}/log/iob_hass_setup.log" 2>&1 \
+            || log "Warning: could not install hass adapter - non-fatal, continuing."
+    fi
+
+    log "Injecting SUPERVISOR_TOKEN into hass.0 native config."
+    hass_config="$(printf '{"native":{"host":"supervisor","port":80,"ssl":false,"token":"%s"}}' "${SUPERVISOR_TOKEN}")"
+    gosu "${IOB_USER}" iob object extend system.adapter.hass.0 "${hass_config}" \
+        >> "${DATA_HOME}/log/iob_hass_setup.log" 2>&1 \
+        || log "Warning: could not configure hass.0 - non-fatal, continuing."
+else
+    dbg "SUPERVISOR_TOKEN not set - skipping hass adapter auto-configuration."
+fi
+
 log "Init complete - handing off to longrun."
