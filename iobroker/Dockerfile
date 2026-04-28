@@ -46,12 +46,14 @@ RUN \
         locales \
         nfs-common \
         nginx \
+        nano \
         procps \
         python3 \
         python3-dev \
         tar \
         tzdata \
         udev \
+        vim \
         wget \
     \
     && sed -i 's/^# *\(de_DE.UTF-8\)/\1/' /etc/locale.gen \
