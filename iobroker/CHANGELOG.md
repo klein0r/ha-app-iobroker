@@ -1,3 +1,7 @@
+## 0.0.10
+
+- Implemented js-controller upgrade via UI
+
 ## 0.0.9
 
 - Fixed: hass instance is not created
