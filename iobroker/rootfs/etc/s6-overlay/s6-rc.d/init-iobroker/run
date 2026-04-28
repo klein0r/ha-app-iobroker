@@ -140,7 +140,7 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
                 EUR) ha_currency="€" ;;
                 USD) ha_currency="\$" ;;
                 GBP) ha_currency="£" ;;
-                CHF) ha_currency="CHF" ;;
+                RUB) ha_currency="₽" ;;
                 *)   ha_currency="${ha_currency_code}" ;;
             esac
             log "HA config: city=${ha_city}, country=${ha_country}, lat=${ha_latitude}, lon=${ha_longitude}, currency=${ha_currency}, language=${ha_language}"
