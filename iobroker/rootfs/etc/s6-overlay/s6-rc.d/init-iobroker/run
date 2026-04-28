@@ -107,6 +107,13 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         log "'iob setup first' failed. See ${DATA_HOME}/log/iob_setup_first.log."
         fail "Fresh-install initialisation failed."
     fi
+    log "Applying default system.config values."
+    gosu "${IOB_USER}" iob object extend system.config \
+        '{"common":{"licenseConfirmed":true,"city":"Berlin","country":"Germany","longitude":13.28,"latitude":52.51,"currency":"€"}}' \
+        >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
+        || log "Warning: could not set system.config defaults - non-fatal, continuing."
+    log "Updating adapter repositories."
+    gosu "${IOB_USER}" iob update
     rm -f "${DATA_HOME}/.fresh_install"
     log "Fresh-install initialisation complete."
 else
