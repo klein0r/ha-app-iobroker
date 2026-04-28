@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/command/with-contenv bash
 # Oneshot init for the ioBroker Home Assistant add-on.
 #
 # Ports the relevant parts of the buanet/ioBroker.docker startup script
