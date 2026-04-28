@@ -2,8 +2,8 @@
 # Called by the ioBroker js-controller UpgradeManager when running in Docker.
 #
 # The UpgradeManager calls this script in two phases:
-#   maintenance.sh on -kbn   -- before upgrade: block s6 restart, stop controller
-#   maintenance.sh off -y    -- after upgrade:  re-enable s6 restart, bring service up
+#   maintenance.sh on    -- before upgrade: block s6 restart, stop controller
+#   maintenance.sh off   -- after upgrade:  re-enable s6 restart, bring service up
 #
 # The s6 finish script for the iobroker longrun service checks for
 # NO_RESTART_FLAG and exits 125 (no restart) while the flag is present.
@@ -23,17 +23,22 @@ case "${MODE}" in
         log "Enabling maintenance mode (flags: ${FLAGS:-none})."
         echo "maintenance" > "${HEALTHCHECK_FILE}"
         touch "${NO_RESTART_FLAG}"
-        # -k flag: send SIGTERM to the running controller process so s6 can
-        # observe the exit and run the finish script (which will exit 125).
-        if [[ "${FLAGS}" == *k* ]]; then
-            log "Stopping controller process."
-            pkill -TERM -f "controller.js" 2>/dev/null || true
+
+        if [[ -d "${S6_SERVICE_DIR}" ]]; then
+            log "Stopping controller via s6."
+            s6-svc -d "${S6_SERVICE_DIR}" || true
+        else
+            log "Stopping controller by name (pkill)."
+            pkill -TERM -f "iobroker.js-controller" 2>/dev/null || true
         fi
+
+        sleep 5
         ;;
     off)
         log "Disabling maintenance mode (flags: ${FLAGS:-none})."
         rm -f "${HEALTHCHECK_FILE}"
         rm -f "${NO_RESTART_FLAG}"
+
         # Bring the s6 longrun back up. After finish exited 125 the service is
         # held in "wants down" state; s6-svc -u releases it.
         if [[ -d "${S6_SERVICE_DIR}" ]]; then

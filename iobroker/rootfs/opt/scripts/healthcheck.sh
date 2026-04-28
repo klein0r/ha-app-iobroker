@@ -17,7 +17,7 @@ if [[ -f "${HEALTHCHECK_FILE}" ]]; then
     esac
 fi
 
-if pgrep -f "node.*controller\.js" > /dev/null 2>&1; then
+if pgrep -f "iobroker.js-controller" > /dev/null 2>&1; then
     echo "js-controller is running"
     exit 0
 fi

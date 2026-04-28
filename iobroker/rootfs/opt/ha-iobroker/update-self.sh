@@ -23,7 +23,7 @@ log "Enabling maintenance mode and stopping controller..."
 
 log "Waiting for controller process to exit (max ${TIMEOUT_SECONDS}s)..."
 elapsed=0
-while pgrep -f "controller.js" > /dev/null 2>&1; do
+while pgrep -f "iobroker.js-controller" > /dev/null 2>&1; do
     if [[ ${elapsed} -ge ${TIMEOUT_SECONDS} ]]; then
         "${MAINTENANCE}" off -y || true
         fail "Controller still running after ${TIMEOUT_SECONDS}s — upgrade aborted."

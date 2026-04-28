@@ -115,7 +115,7 @@ bash /opt/ha-iobroker/update-self.sh
 ```
 
 The script:
-1. Calls `maintenance.sh on -kbn` to block s6 restart and stop the controller.
+1. Calls `maintenance.sh on -k` to block s6 restart and stop the controller.
 2. Waits up to 60 seconds for the controller process to exit.
 3. Runs `iob upgrade self`.
 4. Calls `maintenance.sh off -y` to re-enable and start the controller.
