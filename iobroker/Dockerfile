@@ -42,6 +42,7 @@ RUN \
         gnupg \
         gosu \
         iputils-ping \
+        jq \
         libatomic1 \
         locales \
         nfs-common \

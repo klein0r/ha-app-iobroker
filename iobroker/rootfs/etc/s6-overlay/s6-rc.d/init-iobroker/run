@@ -117,9 +117,48 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         log "'iob setup first' failed. See ${DATA_HOME}/log/iob_setup_first.log."
         fail "Fresh-install initialisation failed."
     fi
-    log "Applying default system.config values."
-    gosu "${IOB_USER}" iob object extend system.config \
-        '{"common":{"licenseConfirmed":true,"city":"Berlin","country":"Germany","longitude":13.40,"latitude":52.50,"currency":"€"}}' \
+    log "Applying system.config values from Home Assistant."
+    ha_latitude="52.50"
+    ha_longitude="13.40"
+    ha_country="DE"
+    ha_language="de"
+    ha_currency="€"
+    ha_city="Berlin"
+    if [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
+        ha_config="$(curl -sf \
+            -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+            -H "Content-Type: application/json" \
+            http://supervisor/core/api/config 2>/dev/null || true)"
+        if [[ -n "${ha_config}" ]]; then
+            ha_latitude="$(echo "${ha_config}" | jq -r '.latitude // 52.50')"
+            ha_longitude="$(echo "${ha_config}" | jq -r '.longitude // 13.40')"
+            ha_country="$(echo "${ha_config}" | jq -r '.country // "DE"')"
+            ha_language="$(echo "${ha_config}" | jq -r '.language // "de"')"
+            ha_city="$(echo "${ha_config}" | jq -r '.location_name // "Berlin"')"
+            ha_currency_code="$(echo "${ha_config}" | jq -r '.currency // "EUR"')"
+            case "${ha_currency_code}" in
+                EUR) ha_currency="€" ;;
+                USD) ha_currency="\$" ;;
+                GBP) ha_currency="£" ;;
+                CHF) ha_currency="CHF" ;;
+                *)   ha_currency="${ha_currency_code}" ;;
+            esac
+            log "HA config: city=${ha_city}, country=${ha_country}, lat=${ha_latitude}, lon=${ha_longitude}, currency=${ha_currency}, language=${ha_language}"
+        else
+            log "Warning: could not fetch HA config - using built-in defaults."
+        fi
+    else
+        log "SUPERVISOR_TOKEN not set - using built-in defaults for system.config."
+    fi
+    system_config_patch="$(jq -n \
+        --argjson lat "${ha_latitude}" \
+        --argjson lon "${ha_longitude}" \
+        --arg city "${ha_city}" \
+        --arg country "${ha_country}" \
+        --arg currency "${ha_currency}" \
+        --arg language "${ha_language}" \
+        '{"common":{"licenseConfirmed":true,"city":$city,"country":$country,"longitude":$lon,"latitude":$lat,"currency":$currency,"language":$language}}')"
+    gosu "${IOB_USER}" iob object extend system.config "${system_config_patch}" \
         >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
         || log "Warning: could not set system.config defaults - non-fatal, continuing."
     log "Updating adapter repositories."
