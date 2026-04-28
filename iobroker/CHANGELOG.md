@@ -1,3 +1,8 @@
+## 0.0.7
+
+- Transfer system config from home assistant to ioBroker
+- Configure hass instance automatically
+
 ## 0.0.6
 
 - Added support for installing extra packages via apt
