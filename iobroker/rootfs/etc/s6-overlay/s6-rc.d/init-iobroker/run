@@ -10,8 +10,8 @@
 #     /opt/iobroker is a symlink to /data/iobroker, kept in sync here.
 #   * UID/GID are pinned to 1000 in the Dockerfile, so SETUID/SETGID logic
 #     is dropped.
-#   * Multihost, external DBs, AVAHI, USB chown, package install,
-#     userscripts are out of scope for this add-on.
+#   * Multihost, external DBs, AVAHI, USB chown, userscripts are out of scope
+#     for this add-on. Extra apt packages can be installed via the add-on option.
 
 set -euo pipefail
 
@@ -30,6 +30,17 @@ IOB_ADMINPORT="${IOB_ADMINPORT:-}"
 log()  { echo "[init-iobroker] $*"; }
 dbg()  { [[ "${DEBUG}" == "true" ]] && echo "[init-iobroker][DEBUG] $*" || true; }
 fail() { echo "[init-iobroker][ERROR] $*" >&2; exit 1; }
+
+# Install user-requested apt packages before anything else so subsequent steps
+# can rely on them being present.
+extra_packages="$(bashio::config 'extra_packages | join(" ")' 2>/dev/null || true)"
+if [[ -n "${extra_packages}" ]]; then
+    log "Installing extra packages: ${extra_packages}"
+    apt-get update -qq
+    # shellcheck disable=SC2086
+    apt-get install -y --no-install-recommends ${extra_packages} \
+        || log "Warning: some packages could not be installed - non-fatal, continuing."
+fi
 
 log "Preparing /data/iobroker layout."
 

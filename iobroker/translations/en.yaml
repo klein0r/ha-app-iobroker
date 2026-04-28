@@ -5,3 +5,8 @@ configuration:
       Automatically installs the ioBroker.hass adapter and configures it to
       connect to Home Assistant via the internal Supervisor API. The token is
       refreshed on every add-on start.
+  extra_packages:
+    name: Extra packages
+    description: >-
+      List of additional apt packages to install on every add-on start (e.g.
+      ffmpeg, curl). Packages are installed before ioBroker starts.
