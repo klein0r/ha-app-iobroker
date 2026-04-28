@@ -1,0 +1,7 @@
+configuration:
+  install_hass_adapter:
+    name: Install Home Assistant adapter
+    description: >-
+      Automatically installs the ioBroker.hass adapter and configures it to
+      connect to Home Assistant via the internal Supervisor API. The token is
+      refreshed on every add-on start.
