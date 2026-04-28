@@ -50,6 +50,18 @@ case "${1:-}" in
         fi
         run_iob "$@"
         ;;
+    m|maint|maintenance)
+        # Maintenance mode aliases, mirroring the buanet iobroker.sh convention.
+        # Shift the alias away so maintenance.sh receives on/off as $1.
+        # Must run as root because maintenance.sh calls s6-svc to control the
+        # service supervision directory, which requires root access.
+        if [[ "$(id -u)" -ne 0 ]]; then
+            echo "Run 'iob maintenance' as root (use 'docker exec -u 0 ...' or open a root shell)."
+            exit 1
+        fi
+        shift
+        exec bash /opt/scripts/maintenance.sh "$@"
+        ;;
     *)
         run_iob "$@"
         ;;
