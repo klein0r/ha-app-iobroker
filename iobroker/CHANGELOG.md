@@ -1,3 +1,8 @@
+## 0.0.11
+
+- Implemented docker healthcheck
+- Fixed: Fake official docker image version (> 8.1.0) to support ui upgrades via maintenance.sh
+
 ## 0.0.10
 
 - Implemented js-controller upgrade via UI
