@@ -1,4 +1,4 @@
-#!/command/with-contenv bash
+#!/command/with-contenv bashio
 # Oneshot init for the ioBroker Home Assistant add-on.
 #
 # Ports the relevant parts of the buanet/ioBroker.docker startup script
@@ -103,6 +103,7 @@ fi
 # in /data, so they are recreated automatically on every container start.
 chown -R "${IOB_UID}:${IOB_GID}" /opt/.docker_config /opt/scripts/.docker_config 2>/dev/null || true
 
+mkdir -p "${DATA_HOME}/log"
 cd "${DATA_HOME}"
 
 # On a freshly seeded install the tar carries a /opt/iobroker/.fresh_install
@@ -110,7 +111,6 @@ cd "${DATA_HOME}"
 # marker so subsequent restarts skip this step.
 if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
     log "Fresh install detected - running 'iob setup first'."
-    mkdir -p "${DATA_HOME}/log"
     chown "${IOB_UID}:${IOB_GID}" "${DATA_HOME}/log"
     if ! gosu "${IOB_USER}" iob setup first \
             > "${DATA_HOME}/log/iob_setup_first.log" 2>&1; then
@@ -224,8 +224,6 @@ fi
 # homeassistant_api: true is set in config.yaml. The token is refreshed on
 # every start so it stays current even after Supervisor restarts.
 if bashio::config.true 'install_hass_adapter' 2>/dev/null; then
-    mkdir -p "${DATA_HOME}/log"
-
     # Use iob object get rather than iob list instances: the latter requires a
     # running controller and can return incomplete output during oneshot phase.
     if ! gosu "${IOB_USER}" iob object get system.adapter.hass.99 >/dev/null 2>&1; then
