@@ -1,3 +1,8 @@
+## 0.0.8
+
+- SUPERVISOR_TOKEN was missing in setup scripts
+- Transfer system config from home assistant to ioBroker
+
 ## 0.0.7
 
 - Transfer system config from home assistant to ioBroker
