@@ -59,10 +59,10 @@ RUN \
     && locale-gen \
     \
     && mkdir -p /opt/.docker_config \
-    && echo "ha-addon" > /opt/.docker_config/.thisisdocker \
+    && echo "ha-app" > /opt/.docker_config/.thisisdocker \
     && echo "true" > /opt/.docker_config/.first_run \
     && mkdir -p /opt/scripts/.docker_config \
-    && echo "ha-addon" > /opt/scripts/.docker_config/.thisisdocker \
+    && echo "ha-app" > /opt/scripts/.docker_config/.thisisdocker \
     \
     && curl -sL https://iobroker.net/install.sh -o /tmp/install.sh \
     && sed -i "s/NODE_MAJOR=[0-9]\+/NODE_MAJOR=${NODE_MAJOR}/" /tmp/install.sh \
