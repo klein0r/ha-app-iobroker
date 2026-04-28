@@ -62,10 +62,10 @@ RUN \
     && locale-gen \
     \
     && mkdir -p /opt/.docker_config \
-    && echo "ha-app" > /opt/.docker_config/.thisisdocker \
+    && echo "v10.0.0" > /opt/.docker_config/.thisisdocker \
     && echo "true" > /opt/.docker_config/.first_run \
     && mkdir -p /opt/scripts/.docker_config \
-    && echo "ha-app" > /opt/scripts/.docker_config/.thisisdocker \
+    && echo "v10.0.0" > /opt/scripts/.docker_config/.thisisdocker \
     \
     && curl -sL https://iobroker.net/install.sh -o /tmp/install.sh \
     && sed -i "s/NODE_MAJOR=[0-9]\+/NODE_MAJOR=${NODE_MAJOR}/" /tmp/install.sh \
@@ -116,9 +116,12 @@ COPY rootfs /
 RUN chmod 0755 \
         /etc/s6-overlay/s6-rc.d/init-iobroker/run \
         /etc/s6-overlay/s6-rc.d/iobroker/run \
+        /etc/s6-overlay/s6-rc.d/iobroker/finish \
         /etc/s6-overlay/s6-rc.d/init-nginx/run \
         /etc/s6-overlay/s6-rc.d/nginx/run \
-        /opt/ha-iobroker/iobroker-wrapper.sh
+        /opt/ha-iobroker/iobroker-wrapper.sh \
+        /opt/ha-iobroker/update-self.sh \
+        /opt/scripts/maintenance.sh
 
 # ioBroker admin UI (direct port mapping; nginx handles the Ingress path)
 EXPOSE 8081

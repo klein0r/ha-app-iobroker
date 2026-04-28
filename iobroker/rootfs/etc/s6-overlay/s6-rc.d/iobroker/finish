@@ -1,0 +1,6 @@
+#!/bin/sh
+# Runs after the run script exits. Exit 125 tells s6 not to restart
+# this service — used during controlled maintenance such as js-controller
+# upgrades. Any other exit code allows the normal restart cycle.
+[ -f /tmp/.iobroker_no_restart ] && exit 125
+exit 0
