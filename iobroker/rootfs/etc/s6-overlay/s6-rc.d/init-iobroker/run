@@ -157,7 +157,7 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         --arg country "${ha_country}" \
         --arg currency "${ha_currency}" \
         --arg language "${ha_language}" \
-        '{"common":{"licenseConfirmed":true,"city":$city,"country":$country,"longitude":$lon,"latitude":$lat,"currency":$currency,"language":$language}}')"
+        '{"common":{"siteName":"ioBroker as Home Assistant App","licenseConfirmed":true,"city":$city,"country":$country,"longitude":$lon,"latitude":$lat,"currency":$currency,"language":$language}}')"
     gosu "${IOB_USER}" iob object extend system.config "${system_config_patch}" \
         >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
         || log "Warning: could not set system.config defaults - non-fatal, continuing."
