@@ -22,6 +22,7 @@ readonly IOB_WRAPPER="/opt/ha-iobroker/iobroker-wrapper.sh"
 readonly IOB_USER="iobroker"
 readonly IOB_UID="$(id -u "${IOB_USER}")"
 readonly IOB_GID="$(id -g "${IOB_USER}")"
+readonly HEALTHCHECK_FILE="/opt/.docker_config/.healthcheck"
 
 DEBUG="${DEBUG:-false}"
 PERMISSION_CHECK="${PERMISSION_CHECK:-true}"
@@ -29,6 +30,8 @@ IOB_ADMINPORT="${IOB_ADMINPORT:-}"
 
 log()  { echo "[init-iobroker] $*"; }
 fail() { echo "[init-iobroker][ERROR] $*" >&2; exit 1; }
+
+echo "starting" > "${HEALTHCHECK_FILE}"
 
 # Install user-requested apt packages before anything else so subsequent steps
 # can rely on them being present.
@@ -245,4 +248,5 @@ else
     log "install_hass_adapter disabled - skipping hass adapter auto-configuration."
 fi
 
+rm -f "${HEALTHCHECK_FILE}"
 log "Init complete - handing off to longrun."

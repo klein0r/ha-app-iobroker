@@ -39,6 +39,7 @@ RUN \
         ca-certificates \
         cifs-utils \
         curl \
+        file \
         gnupg \
         gosu \
         iputils-ping \
@@ -62,10 +63,10 @@ RUN \
     && locale-gen \
     \
     && mkdir -p /opt/.docker_config \
-    && echo "v10.0.0" > /opt/.docker_config/.thisisdocker \
+    && echo "10.0.0" > /opt/.docker_config/.thisisdocker \
     && echo "true" > /opt/.docker_config/.first_run \
     && mkdir -p /opt/scripts/.docker_config \
-    && echo "v10.0.0" > /opt/scripts/.docker_config/.thisisdocker \
+    && echo "10.0.0" > /opt/scripts/.docker_config/.thisisdocker \
     \
     && curl -sL https://iobroker.net/install.sh -o /tmp/install.sh \
     && sed -i "s/NODE_MAJOR=[0-9]\+/NODE_MAJOR=${NODE_MAJOR}/" /tmp/install.sh \
@@ -121,10 +122,16 @@ RUN chmod 0755 \
         /etc/s6-overlay/s6-rc.d/nginx/run \
         /opt/ha-iobroker/iobroker-wrapper.sh \
         /opt/ha-iobroker/update-self.sh \
+        /opt/scripts/healthcheck.sh \
         /opt/scripts/maintenance.sh
 
 # ioBroker admin UI (direct port mapping; nginx handles the Ingress path)
 EXPOSE 8081
+
+# Health check: passes through startup/maintenance states, then confirms
+# the js-controller process is running.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5m --retries=3 \
+    CMD /opt/scripts/healthcheck.sh
 
 # Build arguments injected by the Home Assistant add-on builder
 ARG BUILD_ARCH

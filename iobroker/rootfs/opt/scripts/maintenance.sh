@@ -13,6 +13,7 @@ set -euo pipefail
 MODE="${1:-}"
 FLAGS="${2:-}"
 NO_RESTART_FLAG="/tmp/.iobroker_no_restart"
+HEALTHCHECK_FILE="/opt/.docker_config/.healthcheck"
 S6_SERVICE_DIR="/run/s6/legacy-services/iobroker"
 
 log() { echo "[maintenance] $*"; }
@@ -20,6 +21,7 @@ log() { echo "[maintenance] $*"; }
 case "${MODE}" in
     on)
         log "Enabling maintenance mode (flags: ${FLAGS:-none})."
+        echo "maintenance" > "${HEALTHCHECK_FILE}"
         touch "${NO_RESTART_FLAG}"
         # -k flag: send SIGTERM to the running controller process so s6 can
         # observe the exit and run the finish script (which will exit 125).
@@ -30,6 +32,7 @@ case "${MODE}" in
         ;;
     off)
         log "Disabling maintenance mode (flags: ${FLAGS:-none})."
+        rm -f "${HEALTHCHECK_FILE}"
         rm -f "${NO_RESTART_FLAG}"
         # Bring the s6 longrun back up. After finish exited 125 the service is
         # held in "wants down" state; s6-svc -u releases it.
