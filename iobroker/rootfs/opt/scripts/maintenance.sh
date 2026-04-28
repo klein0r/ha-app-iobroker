@@ -24,15 +24,17 @@ case "${MODE}" in
         echo "maintenance" > "${HEALTHCHECK_FILE}"
         touch "${NO_RESTART_FLAG}"
 
+        # s6-svc -d sends SIGTERM to the exact supervised PID and marks the
+        # service "wants down". init-iobroker grants the iobroker user write
+        # access to supervise/control at startup, so this works without root.
         if [[ -d "${S6_SERVICE_DIR}" ]]; then
             log "Stopping controller via s6."
             s6-svc -d "${S6_SERVICE_DIR}" || true
         else
-            log "Stopping controller by name (pkill)."
-            pkill -TERM -f "iobroker.js-controller" 2>/dev/null || true
+            log "Warning: s6 service directory not found at ${S6_SERVICE_DIR}."
+            exit 2
         fi
 
-        sleep 5
         ;;
     off)
         log "Disabling maintenance mode (flags: ${FLAGS:-none})."
@@ -46,6 +48,7 @@ case "${MODE}" in
             s6-svc -u "${S6_SERVICE_DIR}" || true
         else
             log "Warning: s6 service directory not found at ${S6_SERVICE_DIR}."
+            exit 2
         fi
         ;;
     *)

@@ -248,5 +248,20 @@ else
     log "install_hass_adapter disabled - skipping hass adapter auto-configuration."
 fi
 
+# Grant the iobroker user access to its own s6 service control so that
+# maintenance.sh (called by the UpgradeManager as the iobroker user) can
+# use s6-svc -d / s6-svc -u without needing root.
+# The supervise directory is created by s6-supervise at container start,
+# so it exists by the time this oneshot runs.
+if [[ -d /run/service/iobroker/supervise ]]; then
+    chown root:"${IOB_USER}" /run/service/iobroker/supervise
+    chmod 0750               /run/service/iobroker/supervise
+    chown root:"${IOB_USER}" /run/service/iobroker/supervise/control
+    chmod 0660               /run/service/iobroker/supervise/control
+    log "Granted s6 service control access to ${IOB_USER}."
+else
+    log "Warning: /run/service/iobroker/supervise not found — skipping s6 permission setup."
+fi
+
 rm -f "${HEALTHCHECK_FILE}"
 log "Init complete - handing off to longrun."
