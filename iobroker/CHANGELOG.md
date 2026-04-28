@@ -1,3 +1,8 @@
+## 0.0.9
+
+- Fixed: hass instance is not created
+- Optimized s6-scripts
+
 ## 0.0.8
 
 - SUPERVISOR_TOKEN was missing in setup scripts
