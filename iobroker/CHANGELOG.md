@@ -1,3 +1,8 @@
+## 0.0.12
+
+- Fix: Allow iobroker user to use s6 commands (for upgrade)
+- Updated maintenance script
+
 ## 0.0.11
 
 - Implemented docker healthcheck
