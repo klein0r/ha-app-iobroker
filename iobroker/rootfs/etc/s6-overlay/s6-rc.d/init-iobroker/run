@@ -26,7 +26,6 @@ readonly HEALTHCHECK_FILE="/opt/.docker_config/.healthcheck"
 
 DEBUG="${DEBUG:-false}"
 PERMISSION_CHECK="${PERMISSION_CHECK:-true}"
-IOB_ADMINPORT="${IOB_ADMINPORT:-}"
 
 log()  { echo "[init-iobroker] $*"; }
 fail() { echo "[init-iobroker][ERROR] $*" >&2; exit 1; }
@@ -180,6 +179,7 @@ else
     fi
 fi
 
+current_host="$(hostname)"
 admininstance="$(gosu "${IOB_USER}" iob list instances 2>/dev/null \
     | grep -m1 -oE 'system\.adapter\.admin\.[0-9]+' || true)"
 
@@ -187,6 +187,13 @@ if [[ -z "${admininstance}" ]]; then
     log "No admin instance found - skipping hostname sync."
 else
     log "Detected admin instance: ${admininstance}"
+    admin_host="$(gosu "${IOB_USER}" iob object get "${admininstance}" --pretty 2>/dev/null | grep -oP '(?<="host": ")[^"]*' || true)"
+    log "Recorded admin host: ${admin_host:-<unset>} | container host: ${current_host}"
+
+    if [[ -n "${admin_host}" && "${admin_host}" != "${current_host}" ]]; then
+        log "Updating ioBroker hostname from '${admin_host}' to '${current_host}'."
+        gosu "${IOB_USER}" iob host set "${current_host}"
+    fi
 
     admin_short="${admininstance#system.adapter.}"
 
@@ -200,17 +207,6 @@ else
         log "Enabling reverseProxy on instance ${admininstance} (was: ${admin_reverse_proxy_now:-unset})."
         gosu "${IOB_USER}" iob set "${admin_short}" --reverseProxy true 2>/dev/null \
             || log "Warning: could not set reverseProxy - non-fatal, continuing."
-    fi
-
-    # Optional admin-port override. Defaults to 8081 (the value advertised in
-    # config.yaml). Only set if the user supplied IOB_ADMINPORT.
-    if [[ -n "${IOB_ADMINPORT}" ]]; then
-        admin_port_now="$(gosu "${IOB_USER}" iob object get "${admininstance}" --pretty 2>/dev/null \
-            | grep -oP '(?<="port": )[0-9]+' || true)"
-        if [[ "${IOB_ADMINPORT}" != "${admin_port_now}" ]]; then
-            log "Setting admin port to ${IOB_ADMINPORT} (was ${admin_port_now:-unset})."
-            gosu "${IOB_USER}" iob set "${admin_short}" --port "${IOB_ADMINPORT}"
-        fi
     fi
 fi
 
