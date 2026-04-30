@@ -24,6 +24,15 @@ Or click the **Add repository** button below, click **Add → Close** (You might
 
 [![Open your Home Assistant instance and show the add app repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fklein0r%2Fha-app-iobroker)
 
+## General notes
+
+- Hostname of container is always `3a1c5d11-iobroker` (hash is based on this repository url)
+- Network mode of container is `host`
+
+## Known issues
+
+- Admin instance is not available via sidebar (websocket issue of `iobroker.admin`)
+
 ## License
 
 MIT License
