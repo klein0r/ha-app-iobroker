@@ -1,3 +1,8 @@
+## 0.0.13
+
+- Added option to install and configure mqtt-client instance
+- Map country codes correctly
+
 ## 0.0.12
 
 - Fix: Allow iobroker user to use s6 commands (for upgrade)
