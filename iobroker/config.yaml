@@ -1,5 +1,5 @@
 name: "ioBroker"
-version: 0.0.14
+version: 0.0.15
 stage: experimental
 slug: iobroker
 image: ghcr.io/klein0r/ha-app-iobroker-{arch}

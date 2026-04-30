@@ -1,3 +1,7 @@
+## 0.0.15
+
+- Setting hostname to "this" on every start
+
 ## 0.0.14
 
 - Added missing translations
