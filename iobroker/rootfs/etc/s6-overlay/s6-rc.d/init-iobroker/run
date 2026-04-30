@@ -119,6 +119,12 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         log "'iob setup first' failed. See ${DATA_HOME}/log/iob_setup_first.log."
         fail "Fresh-install initialisation failed."
     fi
+
+    # Remove host entries from build container
+    gosu "${IOB_USER}" iob host remove buildkitsandbox \
+        >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
+        || log "Warning: could not remove old build hostname 'buildkitsandbox' - non-fatal, continuing."
+
     log "Applying system.config values from Home Assistant."
     ha_latitude="52.50"
     ha_longitude="13.40"
@@ -168,8 +174,6 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         || log "Warning: could not set system.config defaults - non-fatal, continuing."
 
     log "Updating adapter repositories and adapters."
-    gosu "${IOB_USER}" iob del backitup 2>/dev/null \
-        || log "Warning: could not delete backitup instance - non-fatal, continuing."
     gosu "${IOB_USER}" iob update >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
     gosu "${IOB_USER}" iob upgrade all >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
 

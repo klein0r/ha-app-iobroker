@@ -72,6 +72,7 @@ RUN \
     && curl -sL https://iobroker.net/install.sh -o /tmp/install.sh \
     && sed -i "s/NODE_MAJOR=[0-9]\+/NODE_MAJOR=${NODE_MAJOR}/" /tmp/install.sh \
     && sed -i 's|NODE_JS_BREW_URL=.*|NODE_JS_BREW_URL="https://nodejs.org"|' /tmp/install.sh \
+    && sed -i 's/"iobroker.backitup": "stable"/"iobroker.hass": "^2.0"/' /tmp/install.sh \
     && bash /tmp/install.sh \
     \
     && iobroker unsetup -y \
