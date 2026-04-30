@@ -184,8 +184,8 @@ fi
 # this typically fires on first start and after an add-on rename.
 current_host="$(hostname)"
 
-log "Updating ioBroker hostname to '${current_host}'."
-gosu "${IOB_USER}" iob host "${current_host}"
+log "Updating ioBroker hostname to 'this' (${current_host})"
+gosu "${IOB_USER}" iob host this >> "${DATA_HOME}/log/iob_setup.log" 2>&1
 
 admininstance="$(gosu "${IOB_USER}" iob list instances 2>/dev/null \
     | grep -m1 -oE 'system\.adapter\.admin\.[0-9]+' || true)"
