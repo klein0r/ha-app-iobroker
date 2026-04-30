@@ -1,3 +1,7 @@
+## 0.0.18
+
+- Avoid installation of backitup in fresh installations
+
 ## 0.0.17
 
 - Remove backitup instance in fresh_install
