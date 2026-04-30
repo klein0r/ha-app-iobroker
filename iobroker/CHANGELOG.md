@@ -1,3 +1,8 @@
+## 0.0.16
+
+- Upgrade all adapters on fresh install
+- Improved error handling
+
 ## 0.0.15
 
 - Setting hostname to "this" on every start
