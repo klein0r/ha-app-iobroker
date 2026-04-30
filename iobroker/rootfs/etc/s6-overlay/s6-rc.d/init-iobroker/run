@@ -180,15 +180,6 @@ else
     fi
 fi
 
-# Sync the hostname recorded in ioBroker with the container hostname.
-# HA Supervisor assigns container hostnames like "addon_local_iobroker", so
-# this typically fires on first start and after an add-on rename.
-current_host="$(hostname)"
-
-log "Updating ioBroker hostname to 'this' (${current_host})"
-gosu "${IOB_USER}" iob host this 2>/dev/null \
-    || log "Warning: could not change hostname to ${current_host} - non-fatal, continuing."
-
 admininstance="$(gosu "${IOB_USER}" iob list instances 2>/dev/null \
     | grep -m1 -oE 'system\.adapter\.admin\.[0-9]+' || true)"
 

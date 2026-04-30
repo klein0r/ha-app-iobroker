@@ -8,8 +8,21 @@
 
 set -euo pipefail
 
+readonly IOB_USER="iobroker"
+
 cd /opt/iobroker
 
-echo "[iobroker] Starting js-controller as user 'iobroker'."
-exec gosu iobroker node \
-    /opt/iobroker/node_modules/iobroker.js-controller/controller.js
+# Sync the hostname recorded in ioBroker with the container hostname.
+# HA Supervisor assigns container hostnames like "addon_local_iobroker", so
+# this typically fires on first start and after an add-on rename.
+current_host="$(hostname)"
+
+log "Updating ioBroker hostname to '${current_host}'"
+gosu "${IOB_USER}" iob host set ${current_host} 2>/dev/null \
+    || log "Warning: could not change hostname to '${current_host}' - non-fatal, continuing."
+
+gosu "${IOB_USER}" iob host remove buildkitsandbox 2>/dev/null \
+    || log "Warning: could not remove host 'buildkitsandbox' - non-fatal, continuing."
+
+echo "[iobroker] Starting js-controller as user '${IOB_USER}'."
+exec gosu "${IOB_USER}" node /opt/iobroker/node_modules/iobroker.js-controller/controller.js
