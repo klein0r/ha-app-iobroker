@@ -43,6 +43,7 @@ RUN \
         gnupg \
         gosu \
         iputils-ping \
+        iso-codes \
         jq \
         libatomic1 \
         locales \

@@ -123,10 +123,11 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
     log "Applying system.config values from Home Assistant."
     ha_latitude="52.50"
     ha_longitude="13.40"
-    ha_country="DE"
+    ha_country="Germany"
     ha_language="de"
     ha_currency="€"
     ha_city="Berlin"
+    ha_site="Home"
     if [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
         ha_config="$(curl -sf \
             -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
@@ -135,9 +136,10 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         if [[ -n "${ha_config}" ]]; then
             ha_latitude="$(echo "${ha_config}" | jq -r '.latitude // 52.50')"
             ha_longitude="$(echo "${ha_config}" | jq -r '.longitude // 13.40')"
-            ha_country="$(echo "${ha_config}" | jq -r '.country // "DE"')"
+            ha_country_code="$(echo "${ha_config}" | jq -r '.country // "Germany"')"
+            ha_country="$(jq -r --arg code "$ha_country_code" '.["3166-1"][] | select(.alpha_2 == $code) | .name' /usr/share/iso-codes/json/iso_3166-1.json)"
             ha_language="$(echo "${ha_config}" | jq -r '.language // "de"')"
-            ha_city="$(echo "${ha_config}" | jq -r '.location_name // "Berlin"')"
+            ha_site="$(echo "${ha_config}" | jq -r '.location_name // "Home"')"
             ha_currency_code="$(echo "${ha_config}" | jq -r '.currency // "EUR"')"
             case "${ha_currency_code}" in
                 EUR) ha_currency="€" ;;
@@ -146,7 +148,7 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
                 RUB) ha_currency="₽" ;;
                 *)   ha_currency="${ha_currency_code}" ;;
             esac
-            log "HA config: city=${ha_city}, country=${ha_country}, lat=${ha_latitude}, lon=${ha_longitude}, currency=${ha_currency}, language=${ha_language}"
+            log "HA config: site=${ha_site}, country=${ha_country}, lat=${ha_latitude}, lon=${ha_longitude}, currency=${ha_currency}, language=${ha_language}"
         else
             log "Warning: could not fetch HA config - using built-in defaults."
         fi
@@ -157,10 +159,11 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         --argjson lat "${ha_latitude}" \
         --argjson lon "${ha_longitude}" \
         --arg city "${ha_city}" \
+        --arg site "${ha_site}" \
         --arg country "${ha_country}" \
         --arg currency "${ha_currency}" \
         --arg language "${ha_language}" \
-        '{"common":{"siteName":"ioBroker as Home Assistant App","licenseConfirmed":true,"city":$city,"country":$country,"longitude":$lon,"latitude":$lat,"currency":$currency,"language":$language}}')"
+        '{"common":{"siteName":$site,"licenseConfirmed":true,"city":$city,"country":$country,"longitude":$lon,"latitude":$lat,"currency":$currency,"language":$language}}')"
     gosu "${IOB_USER}" iob object extend system.config "${system_config_patch}" \
         >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
         || log "Warning: could not set system.config defaults - non-fatal, continuing."
@@ -180,6 +183,10 @@ fi
 # HA Supervisor assigns container hostnames like "addon_local_iobroker", so
 # this typically fires on first start and after an add-on rename.
 current_host="$(hostname)"
+
+log "Updating ioBroker hostname to '${current_host}'."
+gosu "${IOB_USER}" iob host "${current_host}"
+
 admininstance="$(gosu "${IOB_USER}" iob list instances 2>/dev/null \
     | grep -m1 -oE 'system\.adapter\.admin\.[0-9]+' || true)"
 
@@ -187,14 +194,6 @@ if [[ -z "${admininstance}" ]]; then
     log "No admin instance found - skipping hostname sync."
 else
     log "Detected admin instance: ${admininstance}"
-    admin_host="$(gosu "${IOB_USER}" iob object get "${admininstance}" --pretty 2>/dev/null \
-        | grep -oP '(?<="host": ")[^"]*' || true)"
-    log "Recorded admin host: ${admin_host:-<unset>} | container host: ${current_host}"
-
-    if [[ -n "${admin_host}" && "${admin_host}" != "${current_host}" ]]; then
-        log "Updating ioBroker hostname from '${admin_host}' to '${current_host}'."
-        gosu "${IOB_USER}" iob host "${admin_host}"
-    fi
 
     admin_short="${admininstance#system.adapter.}"
 
