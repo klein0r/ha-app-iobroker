@@ -167,9 +167,9 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
     gosu "${IOB_USER}" iob object extend system.config "${system_config_patch}" \
         >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
         || log "Warning: could not set system.config defaults - non-fatal, continuing."
-    log "Updating adapter repositories."
-    gosu "${IOB_USER}" iob update
-    gosu "${IOB_USER}" iob upgrade all
+    log "Updating adapter repositories and adapters."
+    gosu "${IOB_USER}" iob update >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
+    gosu "${IOB_USER}" iob upgrade all >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
     rm -f "${DATA_HOME}/.fresh_install"
     log "Fresh-install initialisation complete."
 else
