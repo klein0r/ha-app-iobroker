@@ -166,9 +166,13 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
     gosu "${IOB_USER}" iob object extend system.config "${system_config_patch}" \
         >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
         || log "Warning: could not set system.config defaults - non-fatal, continuing."
+
     log "Updating adapter repositories and adapters."
+    gosu "${IOB_USER}" iob del backitup 2>/dev/null \
+        || log "Warning: could not delete backitup instance - non-fatal, continuing."
     gosu "${IOB_USER}" iob update >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
     gosu "${IOB_USER}" iob upgrade all >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
+
     rm -f "${DATA_HOME}/.fresh_install"
     log "Fresh-install initialisation complete."
 else
@@ -192,7 +196,7 @@ else
 
     if [[ -n "${admin_host}" && "${admin_host}" != "${current_host}" ]]; then
         log "Updating ioBroker hostname from '${admin_host}' to '${current_host}'."
-        gosu "${IOB_USER}" iob host set "${current_host}"
+        gosu "${IOB_USER}" iob host "${current_host}"
     fi
 
     admin_short="${admininstance#system.adapter.}"
