@@ -56,7 +56,6 @@ RUN \
         tar \
         tzdata \
         udev \
-        vim \
         wget \
     \
     && sed -i 's/^# *\(de_DE.UTF-8\)/\1/' /etc/locale.gen \
@@ -77,6 +76,9 @@ RUN \
     \
     && iobroker unsetup -y \
     && echo "true" > /opt/iobroker/.fresh_install \
+    && rm -rf \
+        /opt/iobroker/.npm \
+        /opt/iobroker/.cache \
     \
     && tar -cf /opt/initial_iobroker.tar -C / opt/iobroker \
     \
