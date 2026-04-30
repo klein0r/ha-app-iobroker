@@ -131,7 +131,6 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
     ha_country="Germany"
     ha_language="de"
     ha_currency="€"
-    ha_city="Berlin"
     ha_site="Home"
     if [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
         ha_config="$(curl -sf \
@@ -163,12 +162,11 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
     system_config_patch="$(jq -n \
         --argjson lat "${ha_latitude}" \
         --argjson lon "${ha_longitude}" \
-        --arg city "${ha_city}" \
         --arg site "${ha_site}" \
         --arg country "${ha_country}" \
         --arg currency "${ha_currency}" \
         --arg language "${ha_language}" \
-        '{"common":{"siteName":$site,"licenseConfirmed":true,"city":$city,"country":$country,"longitude":$lon,"latitude":$lat,"currency":$currency,"language":$language}}')"
+        '{"common":{"siteName":$site,"licenseConfirmed":true,"country":$country,"longitude":$lon,"latitude":$lat,"currency":$currency,"language":$language}}')"
     gosu "${IOB_USER}" iob object extend system.config "${system_config_patch}" \
         >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
         || log "Warning: could not set system.config defaults - non-fatal, continuing."
