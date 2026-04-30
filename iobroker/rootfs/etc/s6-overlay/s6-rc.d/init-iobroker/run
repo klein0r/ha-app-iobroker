@@ -169,6 +169,7 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         || log "Warning: could not set system.config defaults - non-fatal, continuing."
     log "Updating adapter repositories."
     gosu "${IOB_USER}" iob update
+    gosu "${IOB_USER}" iob upgrade all
     rm -f "${DATA_HOME}/.fresh_install"
     log "Fresh-install initialisation complete."
 else
@@ -185,7 +186,8 @@ fi
 current_host="$(hostname)"
 
 log "Updating ioBroker hostname to 'this' (${current_host})"
-gosu "${IOB_USER}" iob host this >> "${DATA_HOME}/log/iob_setup.log" 2>&1
+gosu "${IOB_USER}" iob host this 2>/dev/null \
+    || log "Warning: could not change hostname to ${current_host} - non-fatal, continuing."
 
 admininstance="$(gosu "${IOB_USER}" iob list instances 2>/dev/null \
     | grep -m1 -oE 'system\.adapter\.admin\.[0-9]+' || true)"
