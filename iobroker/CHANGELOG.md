@@ -1,3 +1,8 @@
+## 0.0.14
+
+- Added missing translations
+- Fixed startup error in mqtt-client setup
+
 ## 0.0.13
 
 - Added option to install and configure mqtt-client instance
