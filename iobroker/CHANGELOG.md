@@ -1,3 +1,7 @@
+## 0.0.17
+
+- Remove backitup instance in fresh_install
+
 ## 0.0.16
 
 - Upgrade all adapters on fresh install
