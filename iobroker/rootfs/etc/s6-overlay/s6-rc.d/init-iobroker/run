@@ -247,6 +247,43 @@ else
     log "install_hass_adapter disabled - skipping hass adapter auto-configuration."
 fi
 
+# Wire up the ioBroker.mqtt-client adapter when the option is enabled and an
+# MQTT broker service is registered with the Supervisor.
+# Uses mqtt:want (declared in config.yaml) so the add-on can still start when
+# no MQTT broker is configured; in that case this block is skipped.
+if bashio::config.true 'install_mqtt_client_adapter' 2>/dev/null; then
+    if bashio::services.available "mqtt" 2>/dev/null; then
+        MQTT_HOST="$(bashio::services mqtt "host")"
+        MQTT_PORT="$(bashio::services mqtt "port")"
+        MQTT_USER="$(bashio::services mqtt "username")"
+        MQTT_PASSWORD="$(bashio::services mqtt "password")"
+        MQTT_SSL="$(bashio::services mqtt "ssl")"
+
+        if ! gosu "${IOB_USER}" iob object get system.adapter.mqtt-client.99 >/dev/null 2>&1; then
+            log "mqtt-client adapter instance not found - installing ioBroker.mqtt-client.99"
+            gosu "${IOB_USER}" iob add mqtt-client 99 \
+                >> "${DATA_HOME}/log/iob_setup_mqtt_client.log" 2>&1 \
+                || log "Warning: could not install mqtt-client adapter - non-fatal, continuing."
+        fi
+
+        log "Configuring mqtt-client.99 with MQTT broker at ${MQTT_HOST}:${MQTT_PORT}."
+        mqtt_native_patch="$(jq -n \
+            --arg host "${MQTT_HOST}" \
+            --argjson port "${MQTT_PORT}" \
+            --arg user "${MQTT_USER}" \
+            --arg pass "${MQTT_PASSWORD}" \
+            --argjson ssl "${MQTT_SSL}" \
+            '{"native":{"host":$host,"port":$port,"user":$user,"pass":$pass,"ssl":$ssl}}')"
+        gosu "${IOB_USER}" iob object extend system.adapter.mqtt-client.99 "${mqtt_native_patch}" \
+            >> "${DATA_HOME}/log/iob_setup_mqtt_client.log" 2>&1 \
+            || log "Warning: could not configure mqtt-client.99 - non-fatal, continuing."
+    else
+        log "install_mqtt_client_adapter enabled but no MQTT service available - skipping."
+    fi
+else
+    log "install_mqtt_client_adapter disabled - skipping mqtt-client adapter auto-configuration."
+fi
+
 # Grant the iobroker user access to its own s6 service control so that
 # maintenance.sh (called by the UpgradeManager as the iobroker user) can
 # use s6-svc -d / s6-svc -u without needing root.
