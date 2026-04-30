@@ -5,6 +5,12 @@ configuration:
       Automatically installs the ioBroker.hass adapter and configures it to
       connect to Home Assistant via the internal Supervisor API. The token is
       refreshed on every add-on start.
+  install_mqtt_client_adapter:
+    name: Install MQTT Client adapter
+    description: >-
+      Automatically installs the ioBroker MQTT Client adapter and configures it
+      to connect to the Home Assistant MQTT broker. The credentials are applied
+      on every add-on start.
   extra_packages:
     name: Extra packages
     description: >-
