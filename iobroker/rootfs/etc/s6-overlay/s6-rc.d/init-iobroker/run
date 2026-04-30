@@ -215,9 +215,6 @@ else
 fi
 
 # Wire up the ioBroker.hass adapter when running inside Home Assistant.
-# SUPERVISOR_TOKEN is injected by HA Supervisor on every add-on start when
-# homeassistant_api: true is set in config.yaml. The token is refreshed on
-# every start so it stays current even after Supervisor restarts.
 if bashio::config.true 'install_hass_adapter' 2>/dev/null; then
     # Use iob object get rather than iob list instances: the latter requires a
     # running controller and can return incomplete output during oneshot phase.
@@ -242,8 +239,6 @@ fi
 
 # Wire up the ioBroker.mqtt-client adapter when the option is enabled and an
 # MQTT broker service is registered with the Supervisor.
-# Uses mqtt:want (declared in config.yaml) so the add-on can still start when
-# no MQTT broker is configured; in that case this block is skipped.
 if bashio::config.true 'install_mqtt_client_adapter' 2>/dev/null; then
     if bashio::services.available "mqtt" 2>/dev/null; then
         MQTT_HOST="$(bashio::services mqtt "host")"
