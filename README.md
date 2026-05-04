@@ -32,6 +32,7 @@ Or click the **Add repository** button below, click **Add → Close** (You might
 ## Known issues
 
 - Admin instance is not available via sidebar (websocket issue of `iobroker.admin`)
+- Automatically created instance of `ioBroker.hass` is not working (waiting for PR merge of https://github.com/ioBroker/ioBroker.hass/pull/166)
 
 ## License
 
