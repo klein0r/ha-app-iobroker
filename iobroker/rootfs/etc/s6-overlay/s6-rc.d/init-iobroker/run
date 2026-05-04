@@ -215,7 +215,7 @@ if bashio::config.true 'install_hass_adapter' 2>/dev/null; then
 
     if [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
         log "Changing config of instance hass.99"
-        gosu "${IOB_USER}" iob object extend system.adapter.hass.99 '{"native":{"host":"supervisor","port":80,"secure":false}}' \
+        gosu "${IOB_USER}" iob object extend system.adapter.hass.99 '{"common":{"titleLang":"hass (ha-app)"},"native":{"host":"supervisor","port":80,"secure":false}}' \
             >> "${DATA_HOME}/log/iob_setup_hass.log" 2>&1 \
             || log "Warning: could not configure hass.99 - non-fatal, continuing."
     else
@@ -225,9 +225,11 @@ else
     log "install_hass_adapter disabled - skipping hass adapter auto-configuration."
 fi
 
-# Wire up the ioBroker.mqtt-client adapter when the option is enabled and an
-# MQTT broker service is registered with the Supervisor.
-if bashio::config.true 'install_mqtt_client_adapter' 2>/dev/null; then
+# Wire up ioBroker MQTT adapter(s) when enabled.
+# Credentials are fetched once from the Supervisor even when both options are
+# active, so bashio::services is called at most one time per start.
+if bashio::config.true 'install_mqtt_client_adapter' 2>/dev/null || \
+   bashio::config.true 'install_mqtt_adapter' 2>/dev/null; then
     if bashio::services.available "mqtt" 2>/dev/null; then
         MQTT_HOST="$(bashio::services mqtt "host")"
         MQTT_PORT="$(bashio::services mqtt "port")"
@@ -235,32 +237,60 @@ if bashio::config.true 'install_mqtt_client_adapter' 2>/dev/null; then
         MQTT_PASSWORD="$(bashio::services mqtt "password")"
         MQTT_SSL="$(bashio::services mqtt "ssl")"
 
-        if ! gosu "${IOB_USER}" iob object get system.adapter.mqtt-client.99 >/dev/null 2>&1; then
-            log "mqtt-client adapter instance not found - installing ioBroker.mqtt-client.99"
-            gosu "${IOB_USER}" iob add mqtt-client 99 \
+        if bashio::config.true 'install_mqtt_client_adapter' 2>/dev/null; then
+            if ! gosu "${IOB_USER}" iob object get system.adapter.mqtt-client.99 >/dev/null 2>&1; then
+                log "mqtt-client adapter instance not found - installing ioBroker.mqtt-client.99"
+                gosu "${IOB_USER}" iob add mqtt-client 99 \
+                    >> "${DATA_HOME}/log/iob_setup_mqtt_client.log" 2>&1 \
+                    || log "Warning: could not install mqtt-client adapter - non-fatal, continuing."
+            fi
+
+            log "Configuring mqtt-client.99 with MQTT broker at ${MQTT_HOST}:${MQTT_PORT}."
+
+            mqtt_client_native_patch="$(jq -n \
+                --arg host "${MQTT_HOST}" \
+                --argjson port "${MQTT_PORT}" \
+                --arg username "${MQTT_USER}" \
+                --argjson ssl "${MQTT_SSL}" \
+                '{"common":{"enabled":true,"titleLang":"mqtt-client (ha-app)"},"native":{"clientId":"iob-ha-app-mqttclient","host":$host,"port":$port,"username":$username,"ssl":$ssl}}')"
+
+            gosu "${IOB_USER}" iob object extend system.adapter.mqtt-client.99 "${mqtt_client_native_patch}" \
                 >> "${DATA_HOME}/log/iob_setup_mqtt_client.log" 2>&1 \
-                || log "Warning: could not install mqtt-client adapter - non-fatal, continuing."
+                || log "Warning: could not configure mqtt-client.99 - non-fatal, continuing."
+
+            gosu "${IOB_USER}" iob object set system.adapter.mqtt-client.99 native.password="${MQTT_PASSWORD}" \
+                >> "${DATA_HOME}/log/iob_setup_mqtt_client.log" 2>&1 \
+                || log "Warning: could not set mqtt-client.99 password - non-fatal, continuing."
         fi
 
-        log "Configuring mqtt-client.99 with MQTT broker at ${MQTT_HOST}:${MQTT_PORT}."
-        mqtt_native_patch="$(jq -n \
-            --arg host "${MQTT_HOST}" \
-            --argjson port "${MQTT_PORT}" \
-            --arg username "${MQTT_USER}" \
-            --argjson ssl "${MQTT_SSL}" \
-            '{"native":{"host":$host,"port":$port,"username":$username,"ssl":$ssl}}')"
-        gosu "${IOB_USER}" iob object extend system.adapter.mqtt-client.99 "${mqtt_native_patch}" \
-            >> "${DATA_HOME}/log/iob_setup_mqtt_client.log" 2>&1 \
-            || log "Warning: could not configure mqtt-client.99 - non-fatal, continuing."
-        # Ensure password encryption
-        gosu "${IOB_USER}" iob object set system.adapter.mqtt-client.99 native.password="${MQTT_PASSWORD}" \
-            >> "${DATA_HOME}/log/iob_setup_mqtt_client.log" 2>&1 \
-            || log "Warning: could not set mqtt-client.99 password - non-fatal, continuing."
+        if bashio::config.true 'install_mqtt_adapter' 2>/dev/null; then
+            if ! gosu "${IOB_USER}" iob object get system.adapter.mqtt.99 >/dev/null 2>&1; then
+                log "mqtt adapter instance not found - installing ioBroker.mqtt.99"
+                gosu "${IOB_USER}" iob add mqtt 99 \
+                    >> "${DATA_HOME}/log/iob_setup_mqtt.log" 2>&1 \
+                    || log "Warning: could not install mqtt adapter - non-fatal, continuing."
+            fi
+
+            log "Configuring mqtt.99 with MQTT broker at ${MQTT_HOST}:${MQTT_PORT}."
+
+            mqtt_native_patch="$(jq -n \
+                --arg url "${MQTT_HOST}" \
+                --argjson port "${MQTT_PORT}" \
+                --arg user "${MQTT_USER}" \
+                --argjson ssl "${MQTT_SSL}" \
+                '{"common":{"enabled":true,"titleLang":"mqtt (ha-app)"},"native":{"type":"client","clientId":"iob-ha-app-mqtt","url":$url,"port":$port,"user":$user,"ssl":$ssl}}')"
+
+            gosu "${IOB_USER}" iob object extend system.adapter.mqtt.99 "${mqtt_native_patch}" \
+                >> "${DATA_HOME}/log/iob_setup_mqtt.log" 2>&1 \
+                || log "Warning: could not configure mqtt.99 - non-fatal, continuing."
+
+            gosu "${IOB_USER}" iob object set system.adapter.mqtt.99 native.pass="${MQTT_PASSWORD}" \
+                >> "${DATA_HOME}/log/iob_setup_mqtt.log" 2>&1 \
+                || log "Warning: could not set mqtt.99 password - non-fatal, continuing."
+        fi
     else
-        log "install_mqtt_client_adapter enabled but no MQTT service available - skipping."
+        log "MQTT adapter(s) enabled but no MQTT service available - skipping."
     fi
-else
-    log "install_mqtt_client_adapter disabled - skipping mqtt-client adapter auto-configuration."
 fi
 
 # Grant the iobroker user access to its own s6 service control so that

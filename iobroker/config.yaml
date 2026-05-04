@@ -22,10 +22,12 @@ ports_description:
 options:
   install_hass_adapter: true
   install_mqtt_client_adapter: false
+  install_mqtt_adapter: false
   extra_packages: []
 schema:
   install_hass_adapter: bool
   install_mqtt_client_adapter: bool
+  install_mqtt_adapter: bool
   extra_packages:
     - str
 services:
