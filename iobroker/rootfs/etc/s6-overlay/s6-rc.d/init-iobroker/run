@@ -200,20 +200,6 @@ else
         log "Updating ioBroker hostname from '${admin_host}' to '${current_host}'."
         gosu "${IOB_USER}" iob host "${current_host}"
     fi
-
-    admin_short="${admininstance#system.adapter.}"
-
-    # Enable reverse-proxy mode so the admin adapter honours X-Forwarded-*
-    # headers sent by the Home Assistant Ingress proxy. Without this the UI
-    # generates absolute URLs pointing to the container-internal address
-    # instead of the HA ingress path.
-    admin_reverse_proxy_now="$(gosu "${IOB_USER}" iob object get "${admininstance}" --pretty 2>/dev/null \
-        | grep -oP '(?<="reverseProxy": )\S+' | tr -d ',' || true)"
-    if [[ "${admin_reverse_proxy_now}" != "true" ]]; then
-        log "Enabling reverseProxy on instance ${admininstance} (was: ${admin_reverse_proxy_now:-unset})."
-        gosu "${IOB_USER}" iob set "${admin_short}" --reverseProxy true 2>/dev/null \
-            || log "Warning: could not set reverseProxy - non-fatal, continuing."
-    fi
 fi
 
 # Wire up the ioBroker.hass adapter when running inside Home Assistant.
