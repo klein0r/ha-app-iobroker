@@ -15,6 +15,10 @@ Integration platform for the Internet of Things
 
 ![ioBroker in the Home Assistant Frontend](images/screenshot.png)
 
+## Sponsored by
+
+[![ioBroker Master Kurs](https://haus-automatisierung.com/images/ads/ioBroker-Kurs.png?2024)](https://haus-automatisierung.com/iobroker-kurs/?refid=iobroker-ha-app)
+
 ## Installation
 
 1. In Home Assistant go to **[Settings → Apps → App store](https://my.home-assistant.io/redirect/supervisor_store/)**
