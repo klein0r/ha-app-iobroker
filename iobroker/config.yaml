@@ -36,3 +36,6 @@ hassio_api: true
 homeassistant_api: true
 host_network: true
 usb: true
+uart: true
+udev: true
+backup: cold
