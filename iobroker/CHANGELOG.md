@@ -1,3 +1,11 @@
+## 0.0.19
+
+- Added option to autoconfigure mqtt adapter
+- Enable maintenance mode before backups / disable after backups (to allow hot backups)
+- Map share, ssl and add_config folders to container
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.18...v0.0.19
+
 ## 0.0.18
 
 - Avoid installation of backitup in fresh installations
