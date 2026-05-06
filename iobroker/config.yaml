@@ -38,6 +38,10 @@ host_network: true
 usb: true
 uart: true
 udev: true
+privileged:
+  - NET_ADMIN
+  - NET_RAW
+  - SYS_NICE
 backup: hot
 backup_pre: "iob maintenance on"
 backup_post: "iob maintenance off"
