@@ -42,6 +42,10 @@ privileged:
   - NET_ADMIN
   - NET_RAW
   - SYS_NICE
+map:
+  - ssl:ro
+  - addon_config
+  - share
 backup: hot
 backup_pre: "iob maintenance on"
 backup_post: "iob maintenance off"
