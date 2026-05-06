@@ -38,4 +38,6 @@ host_network: true
 usb: true
 uart: true
 udev: true
-backup: cold
+backup: hot
+backup_pre: "iob maintenance on"
+backup_post: "iob maintenance off"
