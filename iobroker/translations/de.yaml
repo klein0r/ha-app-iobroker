@@ -1,4 +1,10 @@
 configuration:
+  admin_port:
+    name: Admin-Port
+    description: >-
+      Port, auf dem die ioBroker Admin-Oberfläche erreichbar ist. Ändern,
+      wenn ein anderer Dienst (z. B. n8n) Port 8081 bereits belegt. Das
+      Ingress-Panel funktioniert unabhängig von dieser Einstellung.
   apply_ha_settings:
     name: Home Assistant Einstellungen übernehmen
     description: >-

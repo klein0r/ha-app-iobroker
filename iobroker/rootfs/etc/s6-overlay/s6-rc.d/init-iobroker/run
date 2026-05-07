@@ -193,8 +193,7 @@ else
 fi
 
 current_host="$(hostname)"
-admininstance="$(gosu "${IOB_USER}" iob list instances 2>/dev/null \
-    | grep -m1 -oE 'system\.adapter\.admin\.[0-9]+' || true)"
+admininstance="$(gosu "${IOB_USER}" iob list instances 2>/dev/null | grep -m1 -oE 'system\.adapter\.admin\.[0-9]+' || true)"
 
 if [[ -z "${admininstance}" ]]; then
     log "No admin instance found - skipping hostname sync."
@@ -207,6 +206,18 @@ else
         log "Updating ioBroker hostname from '${admin_host}' to '${current_host}'."
         gosu "${IOB_USER}" iob host "${current_host}"
     fi
+
+    # Sync the admin adapter port with the configured admin_port option so that
+    # nginx and ioBroker always agree, even after the user changes the setting.
+    admin_port="$(bashio::config 'admin_port' 2>/dev/null || echo '8081')"
+    if [[ -z "${admin_port}" ]]; then
+        admin_port="8081"
+    fi
+
+    log "Setting admin adapter port to ${admin_port}."
+    gosu "${IOB_USER}" iob object extend "${admininstance}" '{"native":{"port":${admin_port}}}' \
+        >> "${DATA_HOME}/log/iob_setup_admin_port.log" 2>&1 \
+        || log "Warning: could not set admin adapter port - non-fatal, continuing."
 fi
 
 # Wire up the ioBroker.hass adapter when running inside Home Assistant.

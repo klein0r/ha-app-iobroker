@@ -16,12 +16,14 @@ arch:
   - aarch64
   - amd64
 options:
+  admin_port: 8081
   apply_ha_settings: true
   install_hass_adapter: true
   install_mqtt_client_adapter: false
   install_mqtt_adapter: false
   extra_packages: []
 schema:
+  admin_port: int
   apply_ha_settings: bool
   install_hass_adapter: bool
   install_mqtt_client_adapter: bool

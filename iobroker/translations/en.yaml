@@ -1,4 +1,10 @@
 configuration:
+  admin_port:
+    name: Admin port
+    description: >-
+      Port the ioBroker Admin UI listens on. Change this if another service
+      (e.g. n8n) already occupies port 8081. The Ingress panel always works
+      regardless of this setting.
   apply_ha_settings:
     name: Apply Home Assistant settings
     description: >-
