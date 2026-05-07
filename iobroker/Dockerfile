@@ -129,9 +129,6 @@ RUN chmod 0755 \
         /opt/scripts/healthcheck.sh \
         /opt/scripts/maintenance.sh
 
-# ioBroker admin UI (direct port mapping; nginx handles the Ingress path)
-EXPOSE 8081
-
 # Health check: passes through startup/maintenance states, then confirms
 # the js-controller process is running.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5m --retries=3 \
