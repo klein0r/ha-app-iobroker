@@ -47,5 +47,5 @@ map:
   - addon_config
   - share
 backup: hot
-backup_pre: "iob maintenance on"
-backup_post: "iob maintenance off"
+backup_pre: "bash /opt/scripts/maintenance.sh on"
+backup_post: "bash /opt/scripts/maintenance.sh off"

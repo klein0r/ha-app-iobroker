@@ -29,7 +29,7 @@ case "${MODE}" in
         # access to supervise/control at startup, so this works without root.
         if [[ -d "${S6_SERVICE_DIR}" ]]; then
             log "Stopping controller via s6."
-            s6-svc -d "${S6_SERVICE_DIR}" || true
+            s6-svc -wD -T 60000 -d "${S6_SERVICE_DIR}" || true
         else
             log "Warning: s6 service directory not found at ${S6_SERVICE_DIR}."
             exit 2
@@ -45,7 +45,7 @@ case "${MODE}" in
         # held in "wants down" state; s6-svc -u releases it.
         if [[ -d "${S6_SERVICE_DIR}" ]]; then
             log "Signalling s6 to restart iobroker service."
-            s6-svc -u "${S6_SERVICE_DIR}" || true
+            s6-svc -wU -T 60000 -u "${S6_SERVICE_DIR}" || true
         else
             log "Warning: s6 service directory not found at ${S6_SERVICE_DIR}."
             exit 2
