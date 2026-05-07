@@ -226,7 +226,7 @@ else
     fi
 
     log "Setting admin adapter port to ${admin_port}."
-    gosu "${IOB_USER}" iob object extend "${admininstance}" '{"native":{"port":${admin_port}}}' \
+    gosu "${IOB_USER}" iob object extend "${admininstance}" "{\"native\":{\"port\":${admin_port}}}" \
         >> "${DATA_HOME}/log/iob_setup_admin_port.log" 2>&1 \
         || log "Warning: could not set admin adapter port - non-fatal, continuing."
 fi
