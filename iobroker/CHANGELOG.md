@@ -1,3 +1,10 @@
+## 0.0.20
+
+- Added option to copy ha settings on every start
+- Wait for js-controller stop in backup_pre
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.19...v0.0.20
+
 ## 0.0.19
 
 - Added option to autoconfigure mqtt adapter
