@@ -1,3 +1,10 @@
+## 0.0.21
+
+- Log free ressources on init
+- Added option for admin port to avoid port conflicts (default 8081)
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.20...v0.0.21
+
 ## 0.0.20
 
 - Added option to copy ha settings on every start
