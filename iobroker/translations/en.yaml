@@ -1,4 +1,9 @@
 configuration:
+  apply_ha_settings:
+    name: Apply Home Assistant settings
+    description: >-
+      Applies Home Assistant system settings (location, language, currency, site
+      name) to ioBroker's system.config on every add-on start.
   install_hass_adapter:
     name: Install Home Assistant adapter
     description: >-

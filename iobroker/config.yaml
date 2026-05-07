@@ -20,11 +20,13 @@ ports:
 ports_description:
   8081/tcp: Admin interface
 options:
+  apply_ha_settings: true
   install_hass_adapter: true
   install_mqtt_client_adapter: false
   install_mqtt_adapter: false
   extra_packages: []
 schema:
+  apply_ha_settings: bool
   install_hass_adapter: bool
   install_mqtt_client_adapter: bool
   install_mqtt_adapter: bool

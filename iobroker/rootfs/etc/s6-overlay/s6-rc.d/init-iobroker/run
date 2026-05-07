@@ -125,12 +125,30 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
         || log "Warning: could not remove old build hostname 'buildkitsandbox' - non-fatal, continuing."
 
+    log "Updating adapter repositories and adapters."
+    gosu "${IOB_USER}" iob update >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
+    gosu "${IOB_USER}" iob upgrade all >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
+
+    rm -f "${DATA_HOME}/.fresh_install"
+    log "Fresh-install initialisation complete."
+else
+    log "Verifying database connection."
+    if ! gosu "${IOB_USER}" iob uuid >/dev/null 2>&1; then
+        gosu "${IOB_USER}" iob uuid 2>&1 | sed 's/^/[init-iobroker][ERROR] /' >&2 || true
+        fail "ioBroker database not reachable - check /data and try again."
+    fi
+fi
+
+# Apply HA system settings (location, language, currency, site name) to
+# ioBroker's system.config on every start when apply_ha_settings=true
+# so that a backup restored from another system stays in sync.
+if bashio::config.true 'apply_ha_settings' 2>/dev/null; then
     log "Applying system.config values from Home Assistant."
     ha_latitude="52.50"
     ha_longitude="13.40"
     ha_country="Germany"
     ha_language="de"
-    ha_currency="€"
+    ha_currency="EUR"
     ha_site="Home"
     if [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
         ha_config="$(curl -sf \
@@ -140,21 +158,21 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         if [[ -n "${ha_config}" ]]; then
             ha_latitude="$(echo "${ha_config}" | jq -r '.latitude // 52.50')"
             ha_longitude="$(echo "${ha_config}" | jq -r '.longitude // 13.40')"
-            ha_country_code="$(echo "${ha_config}" | jq -r '.country // "Germany"')"
-            ha_country="$(jq -r --arg code "$ha_country_code" '.["3166-1"][] | select(.alpha_2 == $code) | .name' /usr/share/iso-codes/json/iso_3166-1.json)"
+            ha_country_code="$(echo "${ha_config}" | jq -r '.country // "DE"')"
+            ha_country="$(jq -r --arg code "${ha_country_code}" '.["3166-1"][] | select(.alpha_2 == $code) | .name' /usr/share/iso-codes/json/iso_3166-1.json)"
             ha_language="$(echo "${ha_config}" | jq -r '.language // "de"')"
             ha_site="$(echo "${ha_config}" | jq -r '.location_name // "Home"')"
             ha_currency_code="$(echo "${ha_config}" | jq -r '.currency // "EUR"')"
             case "${ha_currency_code}" in
-                EUR) ha_currency="€" ;;
-                USD) ha_currency="\$" ;;
-                GBP) ha_currency="£" ;;
-                RUB) ha_currency="₽" ;;
+                EUR) ha_currency='€' ;;
+                USD) ha_currency='$' ;;
+                GBP) ha_currency='£' ;;
+                RUB) ha_currency='₽' ;;
                 *)   ha_currency="${ha_currency_code}" ;;
             esac
             log "HA config: site=${ha_site}, country=${ha_country}, lat=${ha_latitude}, lon=${ha_longitude}, currency=${ha_currency}, language=${ha_language}"
         else
-            log "Warning: could not fetch HA config - using built-in defaults."
+            log "Warning: could not fetch HA config - using built-in defaults for system.config."
         fi
     else
         log "SUPERVISOR_TOKEN not set - using built-in defaults for system.config."
@@ -168,21 +186,10 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         --arg language "${ha_language}" \
         '{"common":{"siteName":$site,"licenseConfirmed":true,"diag":"no-city","country":$country,"longitude":$lon,"latitude":$lat,"currency":$currency,"language":$language}}')"
     gosu "${IOB_USER}" iob object extend system.config "${system_config_patch}" \
-        >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
-        || log "Warning: could not set system.config defaults - non-fatal, continuing."
-
-    log "Updating adapter repositories and adapters."
-    gosu "${IOB_USER}" iob update >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
-    gosu "${IOB_USER}" iob upgrade all >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
-
-    rm -f "${DATA_HOME}/.fresh_install"
-    log "Fresh-install initialisation complete."
+        >> "${DATA_HOME}/log/iob_apply_ha_settings.log" 2>&1 \
+        || log "Warning: could not apply HA settings to system.config - non-fatal, continuing."
 else
-    log "Verifying database connection."
-    if ! gosu "${IOB_USER}" iob uuid >/dev/null 2>&1; then
-        gosu "${IOB_USER}" iob uuid 2>&1 | sed 's/^/[init-iobroker][ERROR] /' >&2 || true
-        fail "ioBroker database not reachable - check /data and try again."
-    fi
+    log "apply_ha_settings disabled - skipping system.config sync."
 fi
 
 current_host="$(hostname)"

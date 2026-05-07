@@ -1,4 +1,9 @@
 configuration:
+  apply_ha_settings:
+    name: Home Assistant Einstellungen übernehmen
+    description: >-
+      Überträgt Home Assistant Systemeinstellungen (Standort, Sprache, Währung,
+      Standortname) bei jedem Start des Add-ons in die ioBroker system.config.
   install_hass_adapter:
     name: Home Assistant Adapter installieren
     description: >-
