@@ -32,6 +32,17 @@ fail() { echo "[init-iobroker][ERROR] $*" >&2; exit 1; }
 
 echo "starting" > "${HEALTHCHECK_FILE}"
 
+free_mem="$(awk '/^MemAvailable:/ { printf "%d MiB", $2/1024 }' /proc/meminfo)"
+total_mem="$(awk '/^MemTotal:/ { printf "%d MiB", $2/1024 }' /proc/meminfo)"
+log "System memory: ${free_mem} free / ${total_mem} total"
+
+disk_info="$(df -h /data 2>/dev/null | awk 'NR==2 { print $4" free / "$2" total ("$5" used)" }' || true)"
+if [[ -n "${disk_info}" ]]; then
+    log "Disk space (/data): ${disk_info}"
+else
+    log "Disk space: could not determine (df not permitted or /data not mounted)"
+fi
+
 # Install user-requested apt packages before anything else so subsequent steps
 # can rely on them being present.
 apt-get update -qq
