@@ -332,6 +332,9 @@ if [[ -d /run/service/iobroker/supervise ]]; then
     chmod 0750               /run/service/iobroker/supervise
     chown root:"${IOB_USER}" /run/service/iobroker/supervise/control
     chmod 0660               /run/service/iobroker/supervise/control
+    # s6-svc -wD/-wU uses s6-svlisten internally, which reads from supervise/events.
+    chown root:"${IOB_USER}" /run/service/iobroker/supervise/events
+    chmod 0640               /run/service/iobroker/supervise/events
     log "Granted s6 service control access to ${IOB_USER}."
 else
     log "Warning: /run/service/iobroker/supervise not found — skipping s6 permission setup."
