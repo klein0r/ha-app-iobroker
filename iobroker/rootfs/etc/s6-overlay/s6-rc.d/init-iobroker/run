@@ -332,9 +332,14 @@ if [[ -d /run/service/iobroker/supervise ]]; then
     chmod 0750               /run/service/iobroker/supervise
     chown root:"${IOB_USER}" /run/service/iobroker/supervise/control
     chmod 0660               /run/service/iobroker/supervise/control
-    # s6-svc -wD/-wU uses s6-svlisten internally, which reads from supervise/events.
-    chown root:"${IOB_USER}" /run/service/iobroker/supervise/events
-    chmod 0640               /run/service/iobroker/supervise/events
+    # s6-svc -wD/-wU uses s6-svlisten (ftrigr_subscribe) internally, which must
+    # open the event/ directory for reading. s6-supervise creates it as root:root
+    # drwx-ws--T; we hand it to the iobroker group and add group-read so that
+    # s6-svlisten can open it without root.
+    if [[ -d /run/service/iobroker/event ]]; then
+        chown root:"${IOB_USER}" /run/service/iobroker/event
+        chmod g+r                /run/service/iobroker/event
+    fi
     log "Granted s6 service control access to ${IOB_USER}."
 else
     log "Warning: /run/service/iobroker/supervise not found — skipping s6 permission setup."
