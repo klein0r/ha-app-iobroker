@@ -1,3 +1,9 @@
+## 0.0.22
+
+- Fixed maintenance mode for backup creation and js-controller upgrade
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.21...v0.0.22
+
 ## 0.0.21
 
 - Log free ressources on init
