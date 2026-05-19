@@ -125,20 +125,19 @@ cd "${DATA_HOME}"
 if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
     log "Fresh install detected - running 'iob setup first'."
     chown "${IOB_UID}:${IOB_GID}" "${DATA_HOME}/log"
-    if ! gosu "${IOB_USER}" iob setup first \
-            > "${DATA_HOME}/log/iob_setup_first.log" 2>&1; then
-        log "'iob setup first' failed. See ${DATA_HOME}/log/iob_setup_first.log."
+    if ! gosu "${IOB_USER}" iob setup first; then
+        log "'iob setup first' failed."
+
         fail "Fresh-install initialisation failed."
     fi
 
     # Remove host entries from build container
     gosu "${IOB_USER}" iob host remove buildkitsandbox \
-        >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1 \
         || log "Warning: could not remove old build hostname 'buildkitsandbox' - non-fatal, continuing."
 
     log "Updating adapter repositories and adapters."
-    gosu "${IOB_USER}" iob update >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
-    gosu "${IOB_USER}" iob upgrade all >> "${DATA_HOME}/log/iob_setup_first.log" 2>&1
+    gosu "${IOB_USER}" iob update
+    gosu "${IOB_USER}" iob upgrade all
 
     rm -f "${DATA_HOME}/.fresh_install"
     log "Fresh-install initialisation complete."
