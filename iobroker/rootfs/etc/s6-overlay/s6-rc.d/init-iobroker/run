@@ -170,7 +170,15 @@ if bashio::config.true 'apply_ha_settings' 2>/dev/null; then
             ha_longitude="$(echo "${ha_config}" | jq -r '.longitude // 13.40')"
             ha_country_code="$(echo "${ha_config}" | jq -r '.country // "DE"')"
             ha_country="$(jq -r --arg code "${ha_country_code}" '.["3166-1"][] | select(.alpha_2 == $code) | .name' /usr/share/iso-codes/json/iso_3166-1.json)"
-            ha_language="$(echo "${ha_config}" | jq -r '.language // "de"')"
+            ha_language_raw="$(echo "${ha_config}" | jq -r '.language // "de"')"
+            case "${ha_language_raw,,}" in
+                zh-*) ha_language="zh-cn" ;;
+                *)    ha_language="${ha_language_raw%%-*}" ;;
+            esac
+            case "${ha_language}" in
+                en|de|ru|pt|nl|fr|it|es|pl|uk|zh-cn) ;;
+                *) log "Language '${ha_language}' not supported by ioBroker - falling back to 'en'."; ha_language="en" ;;
+            esac
             ha_site="$(echo "${ha_config}" | jq -r '.location_name // "Home"')"
             ha_currency_code="$(echo "${ha_config}" | jq -r '.currency // "EUR"')"
             case "${ha_currency_code}" in
