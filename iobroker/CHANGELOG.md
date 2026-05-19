@@ -1,3 +1,9 @@
+## 0.0.23
+
+- Map Home Assistant language to ioBroker config
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.22...v0.0.23
+
 ## 0.0.22
 
 - Fixed maintenance mode for backup creation and js-controller upgrade
