@@ -131,6 +131,9 @@ if [[ -f "${DATA_HOME}/.fresh_install" ]]; then
         fail "Fresh-install initialisation failed."
     fi
 
+    # Apply default system settings
+    gosu "${IOB_USER}" iob object extend system.config '{"common":{"licenseConfirmed":true,"diag":"no-city"}}'
+
     # Remove host entries from build container
     gosu "${IOB_USER}" iob host remove buildkitsandbox \
         || log "Warning: could not remove old build hostname 'buildkitsandbox' - non-fatal, continuing."
@@ -202,7 +205,7 @@ if bashio::config.true 'apply_ha_settings' 2>/dev/null; then
         --arg country "${ha_country}" \
         --arg currency "${ha_currency}" \
         --arg language "${ha_language}" \
-        '{"common":{"siteName":$site,"licenseConfirmed":true,"diag":"no-city","country":$country,"longitude":$lon,"latitude":$lat,"currency":$currency,"language":$language}}')"
+        '{"common":{"siteName":$site,"country":$country,"longitude":$lon,"latitude":$lat,"currency":$currency,"language":$language}}')"
     gosu "${IOB_USER}" iob object extend system.config "${system_config_patch}" \
         >> "${DATA_HOME}/log/iob_apply_ha_settings.log" 2>&1 \
         || log "Warning: could not apply HA settings to system.config - non-fatal, continuing."
