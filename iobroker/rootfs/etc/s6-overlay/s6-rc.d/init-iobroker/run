@@ -80,24 +80,6 @@ if [[ ! -d "${DATA_HOME}" ]] || [[ -z "$(ls -A "${DATA_HOME}" 2>/dev/null || tru
     chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}"
 elif [[ -f "${DATA_HOME}/iobroker" ]]; then
     log "Existing ioBroker installation detected in ${DATA_HOME}."
-    if [[ ! -d "${DATA_HOME}/node_modules" ]]; then
-        log "node_modules missing — backup restored without node_modules."
-        if [[ -f "${DATA_HOME}/package-lock.json" ]]; then
-            log "Restoring exact package versions via 'npm ci' (this may take several minutes)."
-            gosu "${IOB_USER}" npm ci --omit=dev --prefix "${DATA_HOME}" \
-                >> "${DATA_HOME}/log/npm_ci_restore.log" 2>&1 \
-                || fail "'npm ci' failed — check ${DATA_HOME}/log/npm_ci_restore.log"
-            log "npm ci complete."
-        else
-            log "No package-lock.json found — seeding node_modules from ${INITIAL_TAR}."
-            [[ -f "${INITIAL_TAR}" ]] || fail "Missing ${INITIAL_TAR} - the image is broken."
-            tar -xf "${INITIAL_TAR}" -C "${DATA_HOME}" \
-                --strip-components=2 --wildcards --wildcards-match-slash \
-                'opt/iobroker/node_modules/*'
-            chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}/node_modules"
-            log "node_modules seeded from image tarball."
-        fi
-    fi
 else
     log "Found data in ${DATA_HOME} but no iobroker executable."
     log "If this is not an ioBroker installation, clear the add-on's /data and restart."
@@ -120,6 +102,10 @@ if [[ -f "${IOB_WRAPPER}" ]]; then
     fi
 fi
 
+# Ensure the iob symlink points directly to the wrapper in the same directory,
+# not via the /opt/iobroker indirection left by the installer.
+ln -sf "${DATA_HOME}/iobroker" "${DATA_HOME}/iob"
+
 # Reset ownership inside the data dir. ioBroker is fussy about this and
 # bind-mounted volumes commonly come up root-owned.
 if [[ "${PERMISSION_CHECK}" == "false" ]]; then
@@ -136,6 +122,39 @@ chown -R "${IOB_UID}:${IOB_GID}" /opt/.docker_config /opt/scripts/.docker_config
 
 mkdir -p "${DATA_HOME}/log"
 cd "${DATA_HOME}"
+
+# Restore node_modules after a backup that excluded them (backup_exclude: iobroker/node_modules).
+# Runs here — after chown and mkdir log — so the iobroker user can write and the log dir exists.
+if [[ ! -d "${DATA_HOME}/node_modules" ]]; then
+    log "node_modules missing — backup restored without node_modules."
+    if [[ -f "${DATA_HOME}/package-lock.json" ]]; then
+        log "Restoring exact package versions via 'npm ci' (this may take several minutes)."
+        gosu "${IOB_USER}" npm ci --omit=dev --prefix "${DATA_HOME}" \
+            >> "${DATA_HOME}/log/npm_ci_restore.log" 2>&1 \
+            || fail "'npm ci' failed — check ${DATA_HOME}/log/npm_ci_restore.log"
+        log "npm ci complete."
+    else
+        log "No package-lock.json found — seeding node_modules from ${INITIAL_TAR}."
+        [[ -f "${INITIAL_TAR}" ]] || fail "Missing ${INITIAL_TAR} - the image is broken."
+        tar -xf "${INITIAL_TAR}" -C "${DATA_HOME}" \
+            --strip-components=2 --wildcards --wildcards-match-slash \
+            'opt/iobroker/node_modules/*'
+        chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}/node_modules"
+        log "node_modules seeded from image tarball."
+    fi
+elif [[ -f "${DATA_HOME}/package-lock.json" ]]; then
+    installed_ver="$(node -e "try{process.stdout.write(require('${DATA_HOME}/node_modules/iobroker.js-controller/package.json').version)}catch(e){}" 2>/dev/null || true)"
+    expected_ver="$(node -e "try{const l=require('${DATA_HOME}/package-lock.json');const p=(l.packages||{})['node_modules/iobroker.js-controller'];process.stdout.write(p?p.version:'')}catch(e){}" 2>/dev/null || true)"
+    if [[ -n "${expected_ver}" && "${installed_ver}" != "${expected_ver}" ]]; then
+        log "node_modules version mismatch: installed js-controller ${installed_ver:-unknown}, package-lock.json expects ${expected_ver} — running 'npm ci'."
+        gosu "${IOB_USER}" npm ci --omit=dev --prefix "${DATA_HOME}" \
+            >> "${DATA_HOME}/log/npm_ci_restore.log" 2>&1 \
+            || fail "'npm ci' failed — check ${DATA_HOME}/log/npm_ci_restore.log"
+        log "npm ci complete."
+    else
+        log "node_modules up to date (iobroker.js-controller ${installed_ver:-unknown})."
+    fi
+fi
 
 # On a freshly seeded install the tar carries a /opt/iobroker/.fresh_install
 # marker. "iob setup first" initialises the JSONL database; we then drop the
