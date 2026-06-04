@@ -24,9 +24,6 @@ readonly IOB_UID="$(id -u "${IOB_USER}")"
 readonly IOB_GID="$(id -g "${IOB_USER}")"
 readonly HEALTHCHECK_FILE="/opt/.docker_config/.healthcheck"
 
-DEBUG="${DEBUG:-false}"
-PERMISSION_CHECK="${PERMISSION_CHECK:-true}"
-
 log()  { echo "[init-iobroker] $*"; }
 fail() { echo "[init-iobroker][ERROR] $*" >&2; exit 1; }
 
@@ -83,9 +80,7 @@ elif [[ -f "${DATA_HOME}/iobroker" ]]; then
 else
     log "Found data in ${DATA_HOME} but no iobroker executable."
     log "If this is not an ioBroker installation, clear the add-on's /data and restart."
-    if [[ "${DEBUG}" == "true" ]]; then
-        ls -al "${DATA_HOME}" >&2 || true
-    fi
+    ls -al "${DATA_HOME}" >&2 || true
     fail "Refusing to start - unrecognized ${DATA_HOME} contents."
 fi
 
@@ -108,12 +103,9 @@ ln -sf "${DATA_HOME}/iobroker" "${DATA_HOME}/iob"
 
 # Reset ownership inside the data dir. ioBroker is fussy about this and
 # bind-mounted volumes commonly come up root-owned.
-if [[ "${PERMISSION_CHECK}" == "false" ]]; then
-    log "PERMISSION_CHECK=false - skipping chown of ${DATA_HOME}."
-else
-    log "Resetting ownership on ${DATA_HOME} (this can take a moment)."
-    chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}"
-fi
+log "Resetting ownership on ${DATA_HOME} (this can take a moment)."
+chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}"
+
 
 # /opt/.docker_config and /opt/scripts/.docker_config are read by ioBroker's
 # own scripts to detect "running inside docker". They live on the image, not
