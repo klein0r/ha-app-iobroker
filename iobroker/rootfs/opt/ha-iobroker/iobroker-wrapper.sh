@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Drop-in replacement for /opt/iobroker/iobroker.
+# Drop-in replacement for /data/iobroker/iobroker.
 #
 # The upstream "iobroker" CLI internally uses sudo to switch to the iobroker
 # user. Inside the container we have gosu instead - this wrapper keeps the
@@ -11,7 +11,7 @@
 set -euo pipefail
 
 readonly IOB_USER="iobroker"
-readonly IOB_JS="/opt/iobroker/node_modules/iobroker.js-controller/iobroker.js"
+readonly IOB_JS="/data/iobroker/node_modules/iobroker.js-controller/iobroker.js"
 
 run_iob() {
     if [[ "$(id -u)" -eq 0 ]]; then

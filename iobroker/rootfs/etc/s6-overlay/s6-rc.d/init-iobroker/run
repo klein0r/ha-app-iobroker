@@ -62,12 +62,13 @@ if [[ -e "${IOB_HOME}" && ! -L "${IOB_HOME}" ]]; then
     rm -rf "${IOB_HOME}"
 fi
 
+mkdir -p /data
+
 if [[ ! -L "${IOB_HOME}" ]]; then
     ln -sfn "${DATA_HOME}" "${IOB_HOME}"
 fi
 
 # Seed /data/iobroker on first start (or after a /data wipe).
-mkdir -p /data
 if [[ ! -d "${DATA_HOME}" ]] || [[ -z "$(ls -A "${DATA_HOME}" 2>/dev/null || true)" ]]; then
     [[ -f "${INITIAL_TAR}" ]] || fail "Missing ${INITIAL_TAR} - the image is broken."
     log "Empty /data detected. Seeding fresh ioBroker installation from ${INITIAL_TAR}."
@@ -136,6 +137,11 @@ if [[ ! -d "${DATA_HOME}/node_modules" ]]; then
         log "node_modules seeded from image tarball."
     fi
 fi
+
+log "[DEBUG] Directory contents of ${IOB_HOME}:"
+ls -la "${IOB_HOME}"
+log "[DEBUG] Directory contents of ${DATA_HOME}:"
+ls -la "${DATA_HOME}"
 
 # On a freshly seeded install the tar carries a /opt/iobroker/.fresh_install
 # marker. "iob setup first" initialises the JSONL database; we then drop the
