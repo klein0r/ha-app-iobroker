@@ -1,3 +1,9 @@
+## 0.0.27
+
+- Avoid npm scripts (e.g. `install`) after backup restore
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.26...v0.0.27
+
 ## 0.0.26
 
 - Fixed backup restore issues
