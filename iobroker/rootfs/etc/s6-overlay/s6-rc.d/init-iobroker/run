@@ -100,12 +100,13 @@ fi
 # Ensure the iob symlink points directly to the wrapper in the same directory,
 # not via the /opt/iobroker indirection left by the installer.
 ln -sf "${DATA_HOME}/iobroker" "${DATA_HOME}/iob"
+ln -sf "${DATA_HOME}/iobroker" /usr/bin/iobroker
+ln -sf "${DATA_HOME}/iobroker" /usr/bin/iob
 
 # Reset ownership inside the data dir. ioBroker is fussy about this and
 # bind-mounted volumes commonly come up root-owned.
 log "Resetting ownership on ${DATA_HOME} (this can take a moment)."
 chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}"
-
 
 # /opt/.docker_config and /opt/scripts/.docker_config are read by ioBroker's
 # own scripts to detect "running inside docker". They live on the image, not
