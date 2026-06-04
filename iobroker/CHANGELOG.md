@@ -1,3 +1,9 @@
+## 0.0.29
+
+- Added debug message on startup
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.28...v0.0.29
+
 ## 0.0.28
 
 - Always replace symlinks in /usr/bin/
