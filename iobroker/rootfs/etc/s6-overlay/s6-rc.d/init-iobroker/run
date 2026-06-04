@@ -80,6 +80,24 @@ if [[ ! -d "${DATA_HOME}" ]] || [[ -z "$(ls -A "${DATA_HOME}" 2>/dev/null || tru
     chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}"
 elif [[ -f "${DATA_HOME}/iobroker" ]]; then
     log "Existing ioBroker installation detected in ${DATA_HOME}."
+    if [[ ! -d "${DATA_HOME}/node_modules" ]]; then
+        log "node_modules missing — backup restored without node_modules."
+        if [[ -f "${DATA_HOME}/package-lock.json" ]]; then
+            log "Restoring exact package versions via 'npm ci' (this may take several minutes)."
+            gosu "${IOB_USER}" npm ci --omit=dev --prefix "${DATA_HOME}" \
+                >> "${DATA_HOME}/log/npm_ci_restore.log" 2>&1 \
+                || fail "'npm ci' failed — check ${DATA_HOME}/log/npm_ci_restore.log"
+            log "npm ci complete."
+        else
+            log "No package-lock.json found — seeding node_modules from ${INITIAL_TAR}."
+            [[ -f "${INITIAL_TAR}" ]] || fail "Missing ${INITIAL_TAR} - the image is broken."
+            tar -xf "${INITIAL_TAR}" -C "${DATA_HOME}" \
+                --strip-components=2 --wildcards --wildcards-match-slash \
+                'opt/iobroker/node_modules/*'
+            chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}/node_modules"
+            log "node_modules seeded from image tarball."
+        fi
+    fi
 else
     log "Found data in ${DATA_HOME} but no iobroker executable."
     log "If this is not an ioBroker installation, clear the add-on's /data and restart."
