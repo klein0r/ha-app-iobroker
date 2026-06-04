@@ -1,3 +1,9 @@
+## 0.0.28
+
+- Always replace symlinks in /usr/bin/
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.27...v0.0.28
+
 ## 0.0.27
 
 - Avoid npm scripts (e.g. `install`) after backup restore
