@@ -142,7 +142,6 @@ log "[DEBUG] Directory contents of ${IOB_HOME}:"
 ls -lah "${IOB_HOME}"
 log "[DEBUG] Directory contents of ${DATA_HOME}:"
 ls -lah "${DATA_HOME}"
-du -hs "${DATA_HOME}/*"
 log "[DEBUG] PATH:"
 echo $PATH
 
