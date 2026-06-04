@@ -1,3 +1,9 @@
+## 0.0.26
+
+- Fixed backup restore issues
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.25...v0.0.26
+
 ## 0.0.25
 
 - Use `npm ci` to recreate `node_modules` after backup restore
