@@ -129,7 +129,7 @@ if [[ ! -d "${DATA_HOME}/node_modules" ]]; then
     log "node_modules missing — backup restored without node_modules."
     if [[ -f "${DATA_HOME}/package-lock.json" ]]; then
         log "Restoring exact package versions via 'npm ci' (this may take several minutes)."
-        gosu "${IOB_USER}" npm ci --omit=dev --prefix "${DATA_HOME}" \
+        gosu "${IOB_USER}" npm ci --omit=dev --ignore-scripts --prefix "${DATA_HOME}" \
             >> "${DATA_HOME}/log/npm_ci_restore.log" 2>&1 \
             || fail "'npm ci' failed — check ${DATA_HOME}/log/npm_ci_restore.log"
         log "npm ci complete."
@@ -141,18 +141,6 @@ if [[ ! -d "${DATA_HOME}/node_modules" ]]; then
             'opt/iobroker/node_modules/*'
         chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}/node_modules"
         log "node_modules seeded from image tarball."
-    fi
-elif [[ -f "${DATA_HOME}/package-lock.json" ]]; then
-    installed_ver="$(node -e "try{process.stdout.write(require('${DATA_HOME}/node_modules/iobroker.js-controller/package.json').version)}catch(e){}" 2>/dev/null || true)"
-    expected_ver="$(node -e "try{const l=require('${DATA_HOME}/package-lock.json');const p=(l.packages||{})['node_modules/iobroker.js-controller'];process.stdout.write(p?p.version:'')}catch(e){}" 2>/dev/null || true)"
-    if [[ -n "${expected_ver}" && "${installed_ver}" != "${expected_ver}" ]]; then
-        log "node_modules version mismatch: installed js-controller ${installed_ver:-unknown}, package-lock.json expects ${expected_ver} — running 'npm ci'."
-        gosu "${IOB_USER}" npm ci --omit=dev --prefix "${DATA_HOME}" \
-            >> "${DATA_HOME}/log/npm_ci_restore.log" 2>&1 \
-            || fail "'npm ci' failed — check ${DATA_HOME}/log/npm_ci_restore.log"
-        log "npm ci complete."
-    else
-        log "node_modules up to date (iobroker.js-controller ${installed_ver:-unknown})."
     fi
 fi
 
