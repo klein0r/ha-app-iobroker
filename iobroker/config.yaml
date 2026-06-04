@@ -52,3 +52,5 @@ backup_post: "bash /opt/scripts/maintenance.sh off"
 backup_exclude:
   - "iobroker/node_modules"
   - "iobroker/backups"
+  - "iobroker/.cache"
+  - "iobroker/.npm"
