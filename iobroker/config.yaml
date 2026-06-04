@@ -49,3 +49,6 @@ map:
 backup: hot
 backup_pre: "bash /opt/scripts/maintenance.sh on"
 backup_post: "bash /opt/scripts/maintenance.sh off"
+backup_exclude:
+  - "iobroker/node_modules"
+  - "iobroker/backups"
