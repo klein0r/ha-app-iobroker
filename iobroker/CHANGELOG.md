@@ -1,3 +1,10 @@
+## 0.0.24
+
+- Don't backup node_modules dir
+- Always apply default settings to new installation
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.23...v0.0.24
+
 ## 0.0.23
 
 - Map Home Assistant language to ioBroker config
