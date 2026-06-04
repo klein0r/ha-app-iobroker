@@ -1,3 +1,9 @@
+## 0.0.25
+
+- Use `npm ci` to recreate `node_modules` after backup restore
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.24...v0.0.25
+
 ## 0.0.24
 
 - Don't backup node_modules dir
