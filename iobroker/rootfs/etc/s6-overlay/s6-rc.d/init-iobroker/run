@@ -124,8 +124,8 @@ if [[ ! -d "${DATA_HOME}/node_modules" ]]; then
     if [[ -f "${DATA_HOME}/package-lock.json" ]]; then
         log "Restoring exact package versions via 'npm ci' (this may take several minutes)."
         gosu "${IOB_USER}" npm ci --omit=dev --ignore-scripts --prefix "${DATA_HOME}" \
-            >> "${DATA_HOME}/log/npm_ci_restore.log" 2>&1 \
-            || fail "'npm ci' failed — check ${DATA_HOME}/log/npm_ci_restore.log"
+            2>&1 | tee -a "${DATA_HOME}/log/npm_ci_restore.log" \
+            || fail "'npm ci' failed — see output above"
         log "npm ci complete."
     else
         log "No package-lock.json found — seeding node_modules from ${INITIAL_TAR}."
@@ -139,9 +139,12 @@ if [[ ! -d "${DATA_HOME}/node_modules" ]]; then
 fi
 
 log "[DEBUG] Directory contents of ${IOB_HOME}:"
-ls -la "${IOB_HOME}"
+ls -lah "${IOB_HOME}"
 log "[DEBUG] Directory contents of ${DATA_HOME}:"
-ls -la "${DATA_HOME}"
+ls -lah "${DATA_HOME}"
+du -hs "${DATA_HOME}/*"
+log "[DEBUG] PATH:"
+echo $PATH
 
 # On a freshly seeded install the tar carries a /opt/iobroker/.fresh_install
 # marker. "iob setup first" initialises the JSONL database; we then drop the
