@@ -1,3 +1,9 @@
+## 0.0.30
+
+- Another backup restore fix (hopefully)
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.29...v0.0.30
+
 ## 0.0.29
 
 - Added debug message on startup
