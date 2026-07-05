@@ -15,7 +15,7 @@ jobs:
       version: ${{ steps.version.outputs.addon }}
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -65,7 +65,7 @@ jobs:
       matrix:
         architecture: ${{ fromJson(needs.information.outputs.architectures) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: main
 
