@@ -36,6 +36,7 @@ Or click the **Add repository** button below, click **Add → Close** (You might
 ## Known issues
 
 - Admin instance is not available via sidebar (websocket issue of `iobroker.admin`)
+- A restored backup may leave adapters with native dependencies (e.g. `serialport`, `sqlite3`) broken. Backups exclude `node_modules`, so on restore they are reinstalled via `npm ci --ignore-scripts`, which skips the native build/install step those packages rely on. Run `npm rebuild <adapter>` (or reinstall the affected adapter via the Admin UI) after a restore if it fails to start.
 
 ## License
 
