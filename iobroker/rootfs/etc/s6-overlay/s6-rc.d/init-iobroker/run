@@ -40,13 +40,12 @@ else
     log "Disk space: could not determine (df not permitted or /data not mounted)"
 fi
 
-# Install user-requested apt packages before anything else so subsequent steps
-# can rely on them being present.
-apt-get update -qq
+# Install user-requested apt packages
 extra_packages="$(bashio::config 'extra_packages | join(" ")' 2>/dev/null || true)"
 if [[ -n "${extra_packages}" ]]; then
     log "Installing extra packages: ${extra_packages}"
     # shellcheck disable=SC2086
+    apt-get update -qq
     apt-get install -y --no-install-recommends ${extra_packages} \
         || log "Warning: some packages could not be installed - non-fatal, continuing."
 fi
