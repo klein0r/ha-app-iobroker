@@ -37,7 +37,7 @@ The HA add-on intentionally drops several buanet features — either because HA 
 - **SETUID/SETGID** — UID/GID are pinned to 1000 at build time.
 - **AVAHI** — Home Assistant has its own discovery layer.
 - **Multihost / external states & objects DB** — advanced, not exposed via add-on options yet.
-- **USBDEVICES chown loop** — use the add-on `devices:` field in [config.yaml](iobroker/config.yaml) instead.
+- **USBDEVICES chown loop** — replaced, not dropped. `usb`/`uart`/`udev: true` in [config.yaml](iobroker/config.yaml) map the device nodes in, but mapping says nothing about permissions: the nodes keep the *host's* numeric GID (HAOS uses 18 for `dialout`, Debian 20), so the build-time `usermod -aG dialout iobroker` does not grant access — group names are meaningless across the container boundary, the kernel compares numbers. `init-iobroker` therefore reads the real GID off each mapped serial node and joins that group. Joining beats chown'ing because it survives hotplug. The `devices:` field controls only *whether* a node is mapped and has no effect on ownership.
 - **`PACKAGES` / `PACKAGES_UPDATE`** — image is what it is; rebuild to change it.
 - **Userscripts (`/opt/userscripts`)** — could be reintroduced via an `addon_config` mount later.
 

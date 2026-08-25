@@ -357,6 +357,58 @@ if bashio::config.true 'install_mqtt_client_adapter' 2>/dev/null || \
     fi
 fi
 
+# Grant the iobroker user access to mapped serial devices.
+#
+# The device nodes are created by the host and carry the host's *numeric* GID
+# (Home Assistant OS uses 18 for dialout, Debian uses 20). Group names are
+# meaningless across that boundary - the kernel compares numbers - so the
+# build-time "usermod -aG dialout iobroker" in the Dockerfile does not grant
+# access on HAOS: the node is root:18 mode 660, the user is in group 20.
+#
+# Collect the actual GIDs of the mapped serial devices and join each one.
+# Joining the group (rather than chown'ing the nodes, as buanet does) also
+# survives hotplug: a device plugged in later gets a fresh node from udev with
+# the same host GID, and is therefore accessible without a restart.
+#
+# gosu sets the full supplementary group list when the longrun starts the
+# controller, and adapters forked by the controller inherit it - so this must
+# run here, in the oneshot, before the handoff.
+serial_gids=""
+for dev in /dev/ttyUSB* /dev/ttyACM* /dev/ttyAMA* /dev/ttyS[0-9]*; do
+    [[ -c "${dev}" ]] || continue
+    dev_gid="$(stat -c '%g' "${dev}")"
+    case " ${serial_gids} " in
+        *" ${dev_gid} "*) ;;
+        *) serial_gids="${serial_gids} ${dev_gid}" ;;
+    esac
+done
+
+if [[ -z "${serial_gids// /}" ]]; then
+    log "No serial devices mapped into the container."
+    log "If a USB adapter is attached, restart the add-on."
+else
+    for gid in ${serial_gids}; do
+        if [[ "${gid}" == "${IOB_GID}" ]]; then
+            continue
+        fi
+        # set -e + pipefail: getent exits non-zero for an unknown GID, and a bare
+        # assignment from a failing substitution would abort the whole oneshot.
+        group_name="$(getent group "${gid}" | cut -d: -f1 || true)"
+        if [[ -z "${group_name}" ]]; then
+            group_name="hostserial${gid}"
+            if ! groupadd -g "${gid}" "${group_name}" 2>/dev/null; then
+                log "Warning: could not create group for GID ${gid} - serial devices owned by that group may be inaccessible."
+                continue
+            fi
+        fi
+        if ! id -nG "${IOB_USER}" | tr ' ' '\n' | grep -qxF "${group_name}"; then
+            log "Granting ${IOB_USER} access to serial devices (GID ${gid}, group '${group_name}')."
+            usermod -aG "${group_name}" "${IOB_USER}" \
+                || log "Warning: could not add ${IOB_USER} to group '${group_name}' - non-fatal, continuing."
+        fi
+    done
+fi
+
 # Grant the iobroker user access to its own s6 service control so that
 # maintenance.sh (called by the UpgradeManager as the iobroker user) can
 # use s6-svc -d / s6-svc -u without needing root.
