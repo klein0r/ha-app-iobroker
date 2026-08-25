@@ -1,3 +1,10 @@
+## 0.0.31
+
+- Grant the iobroker user access to mapped serial devices.
+- Based on new image version hassio-addons/debian-base:9.4.0
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.30...v0.0.31
+
 ## 0.0.30
 
 - Another backup restore fix (hopefully)
