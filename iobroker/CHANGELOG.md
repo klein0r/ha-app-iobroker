@@ -1,3 +1,10 @@
+## 0.0.32
+
+- Fixed the WebSocket connection of ioBroker.admin 8.0.7+ behind the Home Assistant ingress (`window.socketPath` is now filled from `X-Ingress-Path`).
+- Fixed deprecated bashio fields
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.0.31...v0.0.32
+
 ## 0.0.31
 
 - Grant the iobroker user access to mapped serial devices.
