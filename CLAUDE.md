@@ -48,7 +48,7 @@ The add-on is normally built by the Home Assistant Supervisor or the `home-assis
 ```bash
 # Build for the host arch
 docker build \
-  --build-arg BUILD_FROM=ghcr.io/hassio-addons/debian-base:9.4.0 \
+  --build-arg BUILD_FROM=ghcr.io/hassio-addons/debian-base:9.5.0 \
   --build-arg BUILD_ARCH=amd64 \
   -t local/ha-iobroker \
   iobroker/
@@ -59,12 +59,13 @@ docker run --rm -it -p 8081:8081 -v iobroker-data:/data local/ha-iobroker
 
 Admin UI is exposed on `8081` and surfaced through HA Ingress (`ingress: true`, `ingress_stream: true` in [config.yaml](iobroker/config.yaml)).
 
-When iterating on the Dockerfile, watch for hadolint failures — the file has explicit `# hadolint ignore=` pragmas (`DL3006`, `DL3008`, `DL3015`) and CI lints it.
+When iterating on the Dockerfile, watch for hadolint failures — the file has explicit `# hadolint ignore=` pragmas (`DL3006`, `DL3008`, `DL3015`, `SC2016`) and CI lints it.
 
 ## Architecture notes that aren't obvious from one file
 
-- **Node.js major version is a build arg.** `ARG NODE_MAJOR=20` is patched into the upstream `install.sh` via `sed` before execution; this matches the buanet image's knob. Bumping Node means changing this arg, not editing the installer.
-- **Pinned Node source URL.** The Dockerfile rewrites `NODE_JS_BREW_URL` in `install.sh` to `https://nodejs.org` so the build does not rely on the installer's default mirror.
+- **Node.js major version is a build arg.** `ARG NODE_MAJOR` is patched into the upstream `install.sh` via `sed` before execution; this matches the buanet image's knob. The installer would otherwise overwrite it with `nodeJsRecommended` from ioBroker's remote `versions.json`, so that assignment is patched out too — without it the image silently follows upstream. The build fails if the installed Node major differs from the arg. Bumping Node means changing this arg, not editing the installer.
+- **Node major marker and native rebuild.** The image writes its Node major to `/opt/iobroker/.node_major` (lands in `/data/iobroker` via the seed tar). `init-iobroker` compares it with the running Node and runs `npm rebuild` on mismatch or when the marker is missing, because `node_modules` persists across image updates and native addons are ABI-bound. The backup-restore `npm ci --ignore-scripts` path deletes the marker to force that rebuild.
+- **`NODE_JS_BREW_URL` rewrite.** Only used by the installer's macOS/brew path, so effectively a no-op on Debian (Node comes from nodesource).
 - **`iobroker unsetup -y` runs at build time** to drop the build-time UUID. Without this, every container instance would advertise the same ioBroker host UUID.
 - **First-boot seeding via tarball.** After install, `/opt/iobroker` is snapshotted into `/opt/initial_iobroker.tar`, then the build-time directory is removed and replaced with a symlink to `/data/iobroker`. The `init-iobroker` oneshot extracts the tar into `/data` (with `--strip-components=1`) on first start so `/opt/iobroker` (the symlink) resolves to a real tree. This is the same trick the buanet image uses, adapted to HA's `/data`-only persistence; preserve both halves when modifying the rootfs or the Dockerfile.
 - **Marker files.** `/opt/.docker_config/.thisisdocker`, `/opt/.docker_config/.first_run`, `/opt/scripts/.docker_config/.thisisdocker`, and `/opt/iobroker/.fresh_install` are read by ioBroker's own scripts to detect "running inside Docker" and "needs first-run setup." Do not delete these.

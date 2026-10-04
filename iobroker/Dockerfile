@@ -1,11 +1,11 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/debian-base:9.4.0
+ARG BUILD_FROM=ghcr.io/hassio-addons/debian-base:9.5.0
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
 # Build arguments controlling the ioBroker installation
 # NODE_MAJOR mirrors the same knob the buanet image uses to pin the
 # Node.js major version pulled in by the official ioBroker installer.
-ARG NODE_MAJOR=22
+ARG NODE_MAJOR=24
 
 ENV \
     DEBIAN_FRONTEND="noninteractive" \
@@ -23,7 +23,12 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 #   can build native modules and access the same OS facilities.
 # - Generates de_DE.UTF-8 / en_US.UTF-8 locales.
 # - Runs the official ioBroker installer with the requested Node major
-#   version and a pinned Node.js source URL.
+#   version and a pinned Node.js source URL. The installer would otherwise
+#   replace NODE_MAJOR with "nodeJsRecommended" from ioBroker's remote
+#   versions.json, so that override is patched out; "nodeJsAccepted" is
+#   still read from there.
+# - Records the installed Node major in the seed tree so init-iobroker can
+#   detect a Node upgrade and rebuild native modules on existing installs.
 # - Calls "iobroker unsetup" to drop the build-time UUID so every
 #   container instance gets its own identity on first start.
 # - Snapshots the freshly installed /opt/iobroker into a tarball that
@@ -31,7 +36,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 #   first start (the buanet "initial_iobroker.tar" trick).
 # - Pins the iobroker user to UID/GID 1000 to match the conventional
 #   Home Assistant add-on user mapping.
-# hadolint ignore=DL3008,DL3015
+# hadolint ignore=DL3008,DL3015,SC2016
 RUN \
     apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -70,9 +75,13 @@ RUN \
     \
     && curl -sL https://iobroker.net/install.sh -o /tmp/install.sh \
     && sed -i "s/NODE_MAJOR=[0-9]\+/NODE_MAJOR=${NODE_MAJOR}/" /tmp/install.sh \
+    && sed -i 's/NODE_MAJOR=\$NODE_MAJOR_FROM_JSON/:/' /tmp/install.sh \
     && sed -i 's|NODE_JS_BREW_URL=.*|NODE_JS_BREW_URL="https://nodejs.org"|' /tmp/install.sh \
     && sed -i 's/"iobroker.backitup": "stable"/"iobroker.hass": ">=2.x"/' /tmp/install.sh \
     && bash /tmp/install.sh \
+    && node_major="$(node -p 'process.versions.node.split(".")[0]')" \
+    && [[ "${node_major}" == "${NODE_MAJOR}" ]] \
+    && echo "${node_major}" > /opt/iobroker/.node_major \
     \
     && iobroker unsetup -y \
     && echo "true" > /opt/iobroker/.fresh_install \

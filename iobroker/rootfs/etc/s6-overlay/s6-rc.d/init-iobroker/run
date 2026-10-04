@@ -126,6 +126,8 @@ if [[ ! -d "${DATA_HOME}/node_modules" ]]; then
             2>&1 | tee -a "${DATA_HOME}/log/npm_ci_restore.log" \
             || fail "'npm ci' failed — see output above"
         log "npm ci complete."
+        # --ignore-scripts skipped the native builds; force the rebuild below.
+        rm -f "${DATA_HOME}/.node_major"
     else
         log "No package-lock.json found — seeding node_modules from ${INITIAL_TAR}."
         [[ -f "${INITIAL_TAR}" ]] || fail "Missing ${INITIAL_TAR} - the image is broken."
@@ -134,6 +136,28 @@ if [[ ! -d "${DATA_HOME}/node_modules" ]]; then
             'opt/iobroker/node_modules/*'
         chown -R "${IOB_UID}:${IOB_GID}" "${DATA_HOME}/node_modules"
         log "node_modules seeded from image tarball."
+    fi
+fi
+
+# Rebuild native modules when the Node.js major changed since node_modules was
+# last built. node_modules persists in /data, so an image update that bumps
+# Node (or a backup restored from an older image) leaves addons compiled for
+# the old ABI and adapters fail with "NODE_MODULE_VERSION mismatch". The image
+# records its Node major in .node_major; a missing marker means the install
+# predates it and was built with an older Node.
+# The marker is only written on success, so a failed rebuild is retried on the
+# next start.
+current_node_major="$(node -p 'process.versions.node.split(".")[0]')"
+recorded_node_major="$(cat "${DATA_HOME}/.node_major" 2>/dev/null || echo "unknown")"
+if [[ "${recorded_node_major}" != "${current_node_major}" ]]; then
+    log "Node.js major changed (${recorded_node_major} -> ${current_node_major}) - rebuilding native modules (this may take several minutes)."
+    if gosu "${IOB_USER}" npm rebuild --prefix "${DATA_HOME}" \
+        2>&1 | tee -a "${DATA_HOME}/log/npm_rebuild.log"; then
+        echo "${current_node_major}" > "${DATA_HOME}/.node_major"
+        chown "${IOB_UID}:${IOB_GID}" "${DATA_HOME}/.node_major"
+        log "Native module rebuild complete."
+    else
+        log "Warning: 'npm rebuild' failed - see ${DATA_HOME}/log/npm_rebuild.log. Will retry on next start."
     fi
 fi
 
