@@ -1,3 +1,9 @@
+## 0.1.1
+
+- Based on new image version hassio-addons/debian-base:9.5.1 (Debian 13.7)
+
+**Full Changelog**: https://github.com/klein0r/ha-app-iobroker/compare/v0.1.0...v0.1.1
+
 ## 0.1.0
 
 - Node 24.x is now default
