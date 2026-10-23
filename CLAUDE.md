@@ -48,8 +48,9 @@ The add-on is normally built by the Home Assistant Supervisor or the `home-assis
 ```bash
 # Build for the host arch
 docker build \
-  --build-arg BUILD_FROM=ghcr.io/hassio-addons/debian-base:9.5.0 \
+  --build-arg BUILD_FROM=ghcr.io/hassio-addons/debian-base:9.5.1 \
   --build-arg BUILD_ARCH=amd64 \
+  --build-arg NODE_MAJOR=24 \
   -t local/ha-iobroker \
   iobroker/
 
