@@ -38,7 +38,7 @@ The HA add-on intentionally drops several buanet features — either because HA 
 - **AVAHI** — Home Assistant has its own discovery layer.
 - **Multihost / external states & objects DB** — advanced, not exposed via add-on options yet.
 - **USBDEVICES chown loop** — replaced, not dropped. `usb`/`uart`/`udev: true` in [config.yaml](iobroker/config.yaml) map the device nodes in, but mapping says nothing about permissions: the nodes keep the *host's* numeric GID (HAOS uses 18 for `dialout`, Debian 20), so the build-time `usermod -aG dialout iobroker` does not grant access — group names are meaningless across the container boundary, the kernel compares numbers. `init-iobroker` therefore reads the real GID off each mapped serial node and joins that group. Joining beats chown'ing because it survives hotplug. The `devices:` field controls only *whether* a node is mapped and has no effect on ownership.
-- **`PACKAGES` / `PACKAGES_UPDATE`** — image is what it is; rebuild to change it.
+- **`PACKAGES` / `PACKAGES_UPDATE`** — narrowed, not dropped. `extra_packages` installs apt packages on start; `update_nodejs` upgrades only the `nodejs` package, which stays within `NODE_MAJOR` because the installer's nodesource repo is `node_<major>.x` and pinned. There is no full `apt-get upgrade`. Both share a single `apt-get update`; a failed update is non-fatal. Nothing persists — the Supervisor recreates the container on every start.
 - **Userscripts (`/opt/userscripts`)** — could be reintroduced via an `addon_config` mount later.
 
 ## Build & run

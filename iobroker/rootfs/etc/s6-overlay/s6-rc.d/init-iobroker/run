@@ -12,6 +12,8 @@
 #     is dropped.
 #   * Multihost, external DBs, AVAHI, USB chown, userscripts are out of scope
 #     for this add-on. Extra apt packages can be installed via the add-on option.
+#   * PACKAGES_UPDATE is narrowed to Node.js (update_nodejs option): only the
+#     nodejs package is upgraded, within its major, never the whole system.
 
 set -euo pipefail
 
@@ -40,14 +42,35 @@ else
     log "Disk space: could not determine (df not permitted or /data not mounted)"
 fi
 
-# Install user-requested apt packages
+# apt work requested via add-on options. The Supervisor recreates the
+# container on every start and the image ships without package lists, so they
+# are fetched here - once, shared by the Node.js update and extra packages.
 extra_packages="$(bashio::config 'extra_packages | join(" ")' 2>/dev/null || true)"
-if [[ -n "${extra_packages}" ]]; then
-    log "Installing extra packages: ${extra_packages}"
-    # shellcheck disable=SC2086
-    apt-get update -qq
-    apt-get install -y --no-install-recommends ${extra_packages} \
-        || log "Warning: some packages could not be installed - non-fatal, continuing."
+if bashio::config.true 'update_nodejs' 2>/dev/null || [[ -n "${extra_packages}" ]]; then
+    log "Updating apt package lists."
+    if ! apt-get update -qq; then
+        log "Warning: 'apt-get update' failed - skipping Node.js update and extra packages, continuing."
+    else
+        # The nodesource repo set up by the installer is node_<NODE_MAJOR>.x
+        # and pinned via /etc/apt/preferences.d/nodejs, so this stays within
+        # the image's Node major and native modules keep their ABI.
+        if bashio::config.true 'update_nodejs' 2>/dev/null; then
+            node_before="$(node -v)"
+            log "Checking for Node.js updates (installed: ${node_before})."
+            if apt-get install -y --only-upgrade --no-install-recommends nodejs; then
+                log "Node.js version: ${node_before} -> $(node -v)."
+            else
+                log "Warning: Node.js update failed - continuing with ${node_before}."
+            fi
+        fi
+
+        if [[ -n "${extra_packages}" ]]; then
+            log "Installing extra packages: ${extra_packages}"
+            # shellcheck disable=SC2086
+            apt-get install -y --no-install-recommends ${extra_packages} \
+                || log "Warning: some packages could not be installed - non-fatal, continuing."
+        fi
+    fi
 fi
 
 log "Preparing /data/iobroker layout."

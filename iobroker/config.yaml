@@ -21,6 +21,7 @@ options:
   install_hass_adapter: true
   install_mqtt_client_adapter: false
   install_mqtt_adapter: false
+  update_nodejs: false
   extra_packages: []
 schema:
   admin_port: int
@@ -28,6 +29,7 @@ schema:
   install_hass_adapter: bool
   install_mqtt_client_adapter: bool
   install_mqtt_adapter: bool
+  update_nodejs: bool
   extra_packages:
     - str
 services:

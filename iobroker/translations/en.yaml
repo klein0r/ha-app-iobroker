@@ -28,6 +28,12 @@ configuration:
       Automatically installs the ioBroker MQTT adapter and configures it to
       connect to the Home Assistant MQTT broker. The credentials are applied
       on every add-on start.
+  update_nodejs:
+    name: Update Node.js
+    description: >-
+      Updates Node.js to the latest release of the installed major version
+      (e.g. 24.x) on every add-on start. Requires internet access and slows
+      down startup. Disable to return to the version shipped with the add-on.
   extra_packages:
     name: Extra packages
     description: >-

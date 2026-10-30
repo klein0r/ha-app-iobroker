@@ -28,6 +28,13 @@ configuration:
       Installiert den ioBroker MQTT Adapter automatisch und konfiguriert ihn
       so, dass er sich mit dem Home Assistant MQTT-Broker verbindet. Die
       Zugangsdaten werden bei jedem Start des Add-ons aktualisiert.
+  update_nodejs:
+    name: Node.js aktualisieren
+    description: >-
+      Aktualisiert Node.js bei jedem Start des Add-ons auf die neueste Version
+      der installierten Major-Version (z. B. 24.x). Benötigt Internetzugang und
+      verlängert den Start. Deaktivieren, um zur mitgelieferten Version
+      zurückzukehren.
   extra_packages:
     name: Zusätzliche Pakete
     description: >-
